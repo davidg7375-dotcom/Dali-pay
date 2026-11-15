@@ -92,6 +92,38 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "v1.0.${{ github.run_number }}" dali-pay.apk \
-            --title "DALI PAY v1.0.${{ github.run_number }}" \
+          gh release create "v1.1.${{ github.run_number }}" dali-pay.apk \
+            --title "DALI PAY v1.1.${{ github.run_number }}" \
             --notes "APK חתום להתקנה. התקנה מעל גרסה קודמת שומרת על הכניסה והנתונים."
+
+  smoke-test:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: dali-pay-apk
+      - name: הפעלת KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: הרצה באמולטור
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disable-animations: true
+          script: bash scripts/emulator-smoke.sh
+      - name: שמירת צילום ולוג בענף device-shots
+        if: always()
+        run: |
+          D="$RUNNER_TEMP/dev"; mkdir -p "$D"; cp -r device-shots/. "$D"/ 2>/dev/null || true
+          cd "$D" && git init -q -b device-shots && git config user.name github-actions && git config user.email actions@github.com
+          git add -A && git commit -qm "בדיקת הפעלה באמולטור" || exit 0
+          git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          git push -f origin device-shots
