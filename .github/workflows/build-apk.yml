@@ -58,7 +58,12 @@ jobs:
       - run: npm install
 
       # מיישר גרסאות חבילות Expo ל-SDK (בסביבת הבנייה בלבד)
+      - run: npx expo install babel-preset-expo
       - run: npx expo install --fix
+
+      # בדיקה מהירה: אריזת ה-JS לבדה, כדי לגלות שגיאות לפני בניית Gradle הארוכה
+      - name: בדיקת חבילת JS
+        run: npx expo export --platform android --output-dir "$RUNNER_TEMP/js-check"
 
       - run: npx expo prebuild --platform android
 
