@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "DALI PAY",
+    "slug": "dali-pay",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#6D3FE0",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#6D3FE0"
+    },
+    "android": {
+      "package": "com.dalipay.app",
+      "versionCode": 1,
+      "supportsRtl": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#7C3AED"
+      }
+    },
+    "extra": {}
+  }
+}
