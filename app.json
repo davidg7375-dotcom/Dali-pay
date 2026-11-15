@@ -15,7 +15,7 @@
     "android": {
       "package": "com.dalipay.app",
       "versionCode": 1,
-      "supportsRtl": true,
+      "supportsRtl": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#7C3AED"
