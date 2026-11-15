@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { I18nManager, Pressable, SafeAreaView, StatusBar, View } from 'react-native';
+import { I18nManager, Platform, Pressable, StatusBar, View } from 'react-native';
 import { configured, supabase } from './src/supabase';
 import { useTable } from './src/useTable';
 import AuthScreen from './src/AuthScreen';
@@ -15,6 +15,9 @@ import { C, Loading, T } from './src/ui';
 I18nManager.allowRTL(false);
 I18nManager.forceRTL(false);
 
+const TOP = Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 44;
+const Screen = ({ children, style }) => <View style={[{ flex: 1, backgroundColor: C.bg, paddingTop: TOP }, style]}>{children}</View>;
+
 const TABS = [
   { key: 'debts', label: 'חובות', icon: '₪' },
   { key: 'products', label: 'מוצרים', icon: '📦' },
@@ -25,10 +28,10 @@ const TABS = [
 export default function App() {
   if (!configured) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', padding: 24, backgroundColor: C.bg }}>
+      <Screen style={{ justifyContent: 'center', padding: 24 }}>
         <T style={{ fontSize: 20, fontWeight: '800', textAlign: 'center' }}>האפליקציה לא מחוברת לענן</T>
         <T style={{ textAlign: 'center', marginTop: 8 }}>חסרים EXPO_PUBLIC_SUPABASE_URL ו-EXPO_PUBLIC_SUPABASE_ANON_KEY. ראה README.</T>
-      </SafeAreaView>
+      </Screen>
     );
   }
   return <Root />;
@@ -43,10 +46,10 @@ function Root() {
   }, []);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
-      <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
+    <Screen>
+      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
       {session === undefined ? <Loading /> : !session ? <AuthScreen /> : <Authed userId={session.user.id} />}
-    </SafeAreaView>
+    </Screen>
   );
 }
 
@@ -88,7 +91,7 @@ function Main({ userId, membership, tab, setTab }) {
         {tab === 'projects' && <ProjectsScreen ctx={ctx} />}
         {tab === 'settings' && <SettingsScreen ctx={ctx} />}
       </View>
-      <View style={{ flexDirection: 'row-reverse', backgroundColor: '#fff', borderTopWidth: 1, borderColor: C.border }}>
+      <View style={{ flexDirection: 'row-reverse', backgroundColor: '#fff', borderTopWidth: 1, borderColor: C.border, paddingBottom: 16 }}>
         {TABS.map((t) => (
           <Pressable key={t.key} onPress={() => setTab(t.key)} style={{ flex: 1, alignItems: 'center', paddingVertical: 8 }}>
             <T style={{ fontSize: 20, textAlign: 'center' }}>{t.icon}</T>

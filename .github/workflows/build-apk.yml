@@ -1,0 +1,23 @@
+name: Build APK (EAS)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: npm install
+      # מיישר גרסאות חבילות Expo ל-SDK (בסביבת הבנייה בלבד)
+      - run: npx expo install --fix
+      - run: npx expo-doctor || true
+      - run: eas init --non-interactive --force
+      - run: eas build -p android --profile preview --non-interactive --no-wait

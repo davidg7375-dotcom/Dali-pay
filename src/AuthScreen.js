@@ -13,9 +13,14 @@ export default function AuthScreen() {
     if (!email.trim() || password.length < 6) return Alert.alert('שגיאה', 'יש להזין אימייל וסיסמה (לפחות 6 תווים)');
     setBusy(true);
     const fn = mode === 'in' ? supabase.auth.signInWithPassword : supabase.auth.signUp;
-    const { error } = await fn.call(supabase.auth, { email: email.trim(), password });
+    const { data, error } = await fn.call(supabase.auth, { email: email.trim(), password });
     setBusy(false);
-    if (error) Alert.alert('שגיאה', error.message);
+    if (error) {
+      const m = /invalid login/i.test(error.message) ? 'אימייל או סיסמה שגויים' : /already registered/i.test(error.message) ? 'המשתמש כבר קיים — עבור להתחברות' : error.message;
+      return Alert.alert('שגיאה', m);
+    }
+    // כשאישור אימייל מופעל ב-Supabase, ההרשמה לא מחזירה session עד לאישור במייל
+    if (mode === 'up' && !data?.session) Alert.alert('כמעט סיימנו', 'נשלח אליך אימייל אישור. אשר אותו ואז התחבר.');
   };
 
   return (
