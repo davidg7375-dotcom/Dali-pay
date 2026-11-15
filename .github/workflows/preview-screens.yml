@@ -1,0 +1,36 @@
+name: Preview Screens
+
+# מריץ את האפליקציה בדפדפן עם נתוני דמה ומצלם את כל המסכים (לבדיקות עיצוב). לא נוגע בנתונים אמיתיים.
+on:
+  workflow_dispatch:
+
+jobs:
+  shoot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx expo install babel-preset-expo
+      - run: npx expo install react-native-web react-dom @expo/metro-runtime
+      - run: npx expo install --fix
+      - name: בניית גרסת web עם נתוני דמה
+        env:
+          DALI_PREVIEW: '1'
+          EXPO_PUBLIC_SUPABASE_URL: https://preview.invalid
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: preview
+        run: npx expo export --platform web --output-dir web-dist
+      - run: npm install --no-save playwright && npx playwright install --with-deps chromium
+      - name: צילום המסכים
+        run: |
+          python3 -m http.server 8081 -d web-dist >/dev/null 2>&1 &
+          sleep 2
+          node preview/shoot.mjs http://localhost:8081/ screens
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screens
+          path: screens
