@@ -36,18 +36,16 @@ eas.json               פרופילי בנייה ל-APK
 ב-`eas.json` החלף את `PUT_SUPABASE_URL_HERE` ו-`PUT_SUPABASE_ANON_KEY_HERE` בשני הערכים (בשני הפרופילים).
 ה-anon key מיועד להיות ציבורי, ההגנה היא בהרשאות ה-RLS שבסכמה.
 
-### 3. בניית APK
+### 3. בניית APK מהטלפון (GitHub Actions, בלי מחשב ובלי חשבון Expo)
 
-```bash
-npm install
-npx expo install --check      # מיישר גרסאות חבילות ל-SDK; הרץ גם עם --fix אם נדרש
-npm install -g eas-cli
-eas login
-eas build -p android --profile preview
-```
+1. ב-GitHub: Settings ← Secrets and variables ← Actions ← New repository secret.
+   שם: `KEYSTORE_PASSPHRASE`, ערך: סיסמה שתבחר (לפחות 8 תווים, חזקה). **שמור אותה במקום בטוח** — בלעדיה אי אפשר לעדכן את האפליקציה.
+2. Actions ← **Build APK** ← Run workflow.
+3. כעבור כ-15–25 דקות ייווצר Release חדש בלשונית Releases, עם הקובץ `dali-pay.apk` להורדה והתקנה.
 
-EAS בונה בענן ומחתים את ה-APK אוטומטית במפתח (keystore) שהוא מנהל עבורך. בסיום תקבל קישור להורדת ה-APK.
-**חשוב:** את אותו keystore EAS שומר עבורך, וכך עדכונים עתידיים יותקנו מעל הגרסה הקיימת בלי למחוק נתונים.
+בריצה הראשונה נוצר מפתח חתימה, מוצפן בסיסמה ונשמר ב-`signing/dalipay.jks.enc` בתוך ה-Repository. בריצות הבאות נעשה בו שימוש חוזר, וכך כל עדכון מותקן מעל הקיים בלי למחוק נתונים. **אסור למחוק את הקובץ הזה או לאבד את הסיסמה.**
+
+בנייה חלופית דרך EAS (דורשת חשבון Expo ו-`EXPO_TOKEN`) קיימת ב-`build-apk-eas.yml` ואינה נחוצה.
 
 ## הוראות התקנה בטלפון
 
@@ -65,7 +63,7 @@ EAS בונה בענן ומחתים את ה-APK אוטומטית במפתח (keys
 ## עדכון האפליקציה בעתיד
 
 1. שנה קוד והעלה commit ל-GitHub.
-2. הרץ `eas build -p android --profile preview` ושלח לשניכם את ה-APK החדש.
+2. הרץ שוב את Build APK ב-Actions ושלח לשניכם את הקישור ל-Release החדש.
 3. התקנה **מעל** הגרסה הקיימת שומרת על הכניסה ועל כל הנתונים (הנתונים בענן).
 4. שינויי מבנה נתונים: הוסף קובץ SQL חדש ב-`supabase/` והרץ אותו ב-SQL Editor לפני ההפצה.
 

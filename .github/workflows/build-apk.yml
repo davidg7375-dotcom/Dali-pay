@@ -1,23 +1,92 @@
-name: Build APK (EAS)
+name: Build APK
 
+# בניית APK חתום ישירות ב-GitHub (בלי חשבון Expo ובלי מחשב).
+# דרוש Secret אחד בלבד: KEYSTORE_PASSPHRASE (סיסמה שתבחר ותשמור במקום בטוח).
 on:
   workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  EXPO_PUBLIC_SUPABASE_URL: https://lkpmrbuwmnrojfbwrwey.supabase.co
+  EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_1raCYj7wPBKhZYj0Zxhn2A_p1st0j8K
+  EXPO_NO_TELEMETRY: '1'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - uses: expo/expo-github-action@v8
+
+      - uses: actions/setup-java@v4
         with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
+          distribution: temurin
+          java-version: 17
+
+      - name: מפתח חתימה (יצירה בפעם הראשונה, שימוש חוזר אחר כך)
+        env:
+          DALI_PASS: ${{ secrets.KEYSTORE_PASSPHRASE }}
+        run: |
+          if [ -z "$DALI_PASS" ] || [ ${#DALI_PASS} -lt 8 ]; then
+            echo "::error::חסר Secret בשם KEYSTORE_PASSPHRASE (לפחות 8 תווים)"; exit 1
+          fi
+          KS="$RUNNER_TEMP/dalipay.jks"
+          if [ -f signing/dalipay.jks.enc ]; then
+            echo "משחזר מפתח קיים"
+            openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in signing/dalipay.jks.enc -out "$KS" -pass env:DALI_PASS \
+              || { echo "::error::פענוח המפתח נכשל — הסיסמה ב-KEYSTORE_PASSPHRASE שגויה. לא נוצר מפתח חדש."; exit 1; }
+          else
+            echo "יוצר מפתח חתימה חדש"
+            keytool -genkeypair -keystore "$KS" -alias dalipay -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$DALI_PASS" -keypass "$DALI_PASS" -dname "CN=DALI PAY, O=DALI PAY, C=IL"
+            mkdir -p signing
+            openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -in "$KS" -out signing/dalipay.jks.enc -pass env:DALI_PASS
+            git config user.name "github-actions"
+            git config user.email "actions@github.com"
+            git add signing/dalipay.jks.enc
+            git commit -m "מפתח חתימה מוצפן של DALI PAY (נוצר אוטומטית; חובה לשמור)"
+            git push
+          fi
+          echo "DALI_KEYSTORE=$KS" >> "$GITHUB_ENV"
+
       - run: npm install
+
       # מיישר גרסאות חבילות Expo ל-SDK (בסביבת הבנייה בלבד)
       - run: npx expo install --fix
-      - run: npx expo-doctor || true
-      - run: eas init --non-interactive --force
-      - run: eas build -p android --profile preview --non-interactive --no-wait
+
+      - run: npx expo prebuild --platform android
+
+      - name: חתימה ומספר גרסה
+        env:
+          DALI_PASS: ${{ secrets.KEYSTORE_PASSPHRASE }}
+        run: python3 scripts/patch-signing.py android/app/build.gradle ${{ github.run_number }}
+
+      - name: בניית APK
+        working-directory: android
+        env:
+          DALI_PASS: ${{ secrets.KEYSTORE_PASSPHRASE }}
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a,armeabi-v7a --no-daemon
+
+      - name: שם קובץ
+        run: cp android/app/build/outputs/apk/release/app-release.apk dali-pay.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dali-pay-apk
+          path: dali-pay.apk
+
+      - name: פרסום ל-Releases (קישור הורדה לטלפון)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v1.0.${{ github.run_number }}" dali-pay.apk \
+            --title "DALI PAY v1.0.${{ github.run_number }}" \
+            --notes "APK חתום להתקנה. התקנה מעל גרסה קודמת שומרת על הכניסה והנתונים."
