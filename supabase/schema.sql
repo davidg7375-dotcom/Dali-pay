@@ -154,3 +154,9 @@ begin
   begin alter publication supabase_realtime add table projects; exception when duplicate_object then null; end;
   begin alter publication supabase_realtime add table members; exception when duplicate_object then null; end;
 end $$;
+
+-- הקשחה: הפונקציות זמינות רק למשתמשים מחוברים (לא לאורחים)
+revoke execute on function create_group(text, text) from public, anon;
+revoke execute on function join_group(text, text) from public, anon;
+grant execute on function create_group(text, text) to authenticated;
+grant execute on function join_group(text, text) to authenticated;
