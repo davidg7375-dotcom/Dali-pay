@@ -21,6 +21,7 @@
         "backgroundColor": "#7C3AED"
       }
     },
-    "extra": {}
+    "extra": {},
+    "scheme": "dalipay"
   }
 }
