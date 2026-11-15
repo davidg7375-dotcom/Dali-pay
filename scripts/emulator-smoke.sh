@@ -2,7 +2,7 @@
 # בדיקת עשן: מתקין את ה-APK באמולטור, פותח אותו, מצלם ומוודא שאין קריסה.
 set -u
 OUT=device-shots; mkdir -p "$OUT"
-adb install -r dali-pay.apk | tee "$OUT/install.txt"
+adb install -r dali-pay-x86-test.apk | tee "$OUT/install.txt"
 grep -q Success "$OUT/install.txt" || { echo "INSTALL FAILED"; exit 1; }
 adb logcat -c
 adb shell monkey -p com.dalipay.app -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1

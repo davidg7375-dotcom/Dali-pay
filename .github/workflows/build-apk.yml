@@ -96,6 +96,21 @@ jobs:
             --title "DALI PAY v1.1.${{ github.run_number }}" \
             --notes "APK חתום להתקנה. התקנה מעל גרסה קודמת שומרת על הכניסה והנתונים."
 
+      # גרסת בדיקה בלבד (x86) לאמולטור ב-CI. לא מתפרסמת ולא נמסרת לטלפון.
+      - name: בניית APK x86 לבדיקה
+        working-directory: android
+        env:
+          DALI_PASS: ${{ secrets.KEYSTORE_PASSPHRASE }}
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon
+
+      - name: שם קובץ בדיקה
+        run: cp android/app/build/outputs/apk/release/app-release.apk dali-pay-x86-test.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dali-pay-x86-test
+          path: dali-pay-x86-test.apk
+
   smoke-test:
     needs: build
     runs-on: ubuntu-latest
@@ -104,7 +119,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: dali-pay-apk
+          name: dali-pay-x86-test
       - name: הפעלת KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
