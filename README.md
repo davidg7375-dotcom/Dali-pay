@@ -28,7 +28,7 @@ eas.json               פרופילי בנייה ל-APK
 
 1. פתח פרויקט חינמי ב-https://supabase.com.
 2. SQL Editor ← New query ← הדבק את כל `supabase/schema.sql` ← Run.
-3. Authentication ← Providers ← Email. לנוחות אפשר לכבות את "Confirm email" (אחרת צריך לאשר אימייל בכל הרשמה).
+3. Authentication ← Sign In / Providers ← Email: **כבה "Confirm email"** (האפליקציה מניחה שההרשמה מחזירה כניסה מיידית).
 4. Project Settings ← API: העתק את **Project URL** ואת **anon public key**.
 
 ### 2. חיבור האפליקציה

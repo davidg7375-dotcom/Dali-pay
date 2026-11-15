@@ -67,9 +67,6 @@ jobs:
 
       - run: npx expo prebuild --platform android
 
-      - name: בדיקה שקישורי dalipay:// רשומים באפליקציה
-        run: grep -q 'android:scheme="dalipay"' android/app/src/main/AndroidManifest.xml || { echo "::error::הסכמה dalipay חסרה ב-AndroidManifest"; exit 1; }
-
       - name: חתימה ומספר גרסה
         env:
           DALI_PASS: ${{ secrets.KEYSTORE_PASSPHRASE }}

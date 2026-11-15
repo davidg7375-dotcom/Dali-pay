@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, I18nManager, Platform, Pressable, StatusBar, View } from 'react-native';
+import { I18nManager, Platform, Pressable, StatusBar, View } from 'react-native';
 import { configured, supabase } from './src/supabase';
 import { useTable } from './src/useTable';
-import { listenForAuthLinks } from './src/authLink';
 import AuthScreen from './src/AuthScreen';
 import GroupSetup from './src/GroupSetup';
 import DebtsScreen from './src/DebtsScreen';
@@ -43,8 +42,7 @@ function Root() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
-    const stop = listenForAuthLinks((r) => { if (r.error) Alert.alert('אימות', r.error); });
-    return () => { data.subscription.unsubscribe(); stop(); };
+    return () => data.subscription.unsubscribe();
   }, []);
 
   return (
