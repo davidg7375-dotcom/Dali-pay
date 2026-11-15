@@ -35,7 +35,7 @@ export const SPRITES = {
 export const RATIO = {
   think_who: 0.926,
   think_howmuch: 0.932,
-  hero: 0.906,
+  hero: 0.827,
   paid_cash: 1.056,
   closed: 1.112,
   sleeping: 1.109,

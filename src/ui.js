@@ -227,7 +227,7 @@ export const s = StyleSheet.create({
   input: { backgroundColor: '#fff', borderWidth: 2, borderColor: C.border, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, textAlign: 'right', writingDirection: 'rtl', color: C.ink, marginBottom: 10 },
   card: { backgroundColor: C.card, borderRadius: 22, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: C.border, shadowColor: '#4C1D95', shadowOpacity: 0.1, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
   chip: { paddingHorizontal: 15, paddingVertical: 8, borderRadius: 22, borderWidth: 2, borderColor: C.border, backgroundColor: '#fff' },
-  header: { paddingTop: TOP + 10, paddingBottom: 18, paddingHorizontal: 18, marginBottom: 4 },
+  header: { height: TOP + 98, paddingTop: TOP + 10, paddingHorizontal: 18, marginBottom: 4, justifyContent: 'center' },
   overlay: { flex: 1, backgroundColor: 'rgba(30,10,70,0.5)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: C.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 18, maxHeight: '90%' },
   sheetTitle: { fontSize: 21, fontWeight: '900', color: C.deep, flex: 1 },
