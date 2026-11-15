@@ -4,6 +4,9 @@ name: Preview Screens
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   shoot:
     runs-on: ubuntu-latest
@@ -34,3 +37,15 @@ jobs:
         with:
           name: screens
           path: screens
+      - name: שמירת הצילומים בענף preview-shots (לצפייה)
+        if: always()
+        run: |
+          cp -r screens "$RUNNER_TEMP/screens"
+          git config user.name github-actions
+          git config user.email actions@github.com
+          git checkout --orphan preview-shots
+          git rm -rf . >/dev/null 2>&1 || true
+          cp -r "$RUNNER_TEMP/screens/." .
+          git add -A
+          git commit -qm "צילומי מסך מהתצוגה המקדימה"
+          git push -f origin preview-shots
