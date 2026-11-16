@@ -20,13 +20,15 @@ async function user(browser) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, locale: 'he-IL' });
   const page = await ctx.newPage();
   const errs = []; page.on('pageerror', (e) => errs.push(String(e)));
-  const opened = [];
-  const bridge = createBridge(server.clientFor(), { emit: (o) => page.evaluate((m) => window.__fromNative(m), o).catch(() => {}), share: async () => {}, exit: () => { page.__exited = true; }, open: async (u) => opened.push(u) });
+  const opened = [], notes = [], installs = [];
+  const upd = { info: { available: false } };
+  const update = { check: async () => upd.info, install: async (u) => { installs.push(u); }, settings: async () => { installs.push('settings'); } };
+  const bridge = createBridge(server.clientFor(), { emit: (o) => page.evaluate((m) => window.__fromNative(m), o).catch(() => {}), share: async () => {}, exit: () => { page.__exited = true; }, open: async (u) => opened.push(u), notify: (t) => notes.push(t), update });
   await page.exposeFunction('__host', async (s) => { const r = await bridge.handle(JSON.parse(s)); await page.evaluate((m) => window.__fromNative(m), r).catch(() => {}); });
   await page.addInitScript(() => { window.DP_SPLASH_MS = 300; window.ReactNativeWebView = { postMessage: (s) => window.__host(s) }; });
   await page.route(BASE + '**', (r) => r.fulfill({ contentType: 'text/html; charset=utf-8', body: html }));
   await page.goto(BASE);
-  return { page, errs, opened, bridge };
+  return { page, errs, opened, bridge, notes, installs, upd };
 }
 const txt = (p, sel) => p.locator(sel).innerText();
 const wait = (p, ms = 500) => p.waitForTimeout(ms);
@@ -87,7 +89,7 @@ await e.fill('#rAmt', '50'); await e.click('#rGo'); await wait(e, 1000);
 ok('אלי: דיווח נשלח ומוצג "ממתין לאישור"', (await txt(e, '#debts')).includes('ממתין לאישור'));
 ok('אלי: החוב לא השתנה עד אישור', (await txt(e, '#sIowe')).includes('120'));
 await wait(d, 900);
-ok('דוד: מקבל התראה על הדיווח', (await txt(d, '#toast')).includes('דיווח ששילם'), await txt(d, '#toast'));
+ok('דוד: מקבל הודעת מערכת על הדיווח', D.notes.some((t) => t.includes('דיווח ששילם')), D.notes.join(' | '));
 ok('דוד: כרטיס החוב מסומן "לאישור שלך"', (await txt(d, '#debts')).includes('לאישור שלך'));
 await d.locator('[data-debt]').first().click(); await wait(d, 500);
 await d.screenshot({ path: OUT + 'e03-creditor-sheet.png' });
@@ -106,7 +108,7 @@ ok('דוד: דחה דיווח — החוב נשאר 70', (await txt(d, '#sOwed')
 await e.locator('[data-debt]').first().click(); await wait(e, 500); await e.click('#aEdit'); await wait(e, 400);
 ok('אלי: אין בחירת כיוון בעריכה', await e.locator('#fDir').count() === 0);
 await e.fill('#fAmt', '100'); await e.click('#fSave'); await wait(e, 600);
-ok('אלי: הקטנת סכום נחסמה', (await txt(e, '#toast')).includes('להקטין'), await txt(e, '#toast'));
+ok('אלי: הקטנת סכום נחסמה (הודעת מערכת)', E.notes.some((t) => t.includes('להקטין')), E.notes.join(' | '));
 await e.click('#scrim', { position: { x: 5, y: 5 } }); await wait(e, 400);
 
 // ── סגירה מלאה ע"י המקבל
@@ -124,6 +126,30 @@ ok('מוצר נמסר ומסונכרן', (await txt(d, '#prods')).includes('אי
 await d.click('#bNote'); await wait(d, 400); await d.fill('#nTxt', 'תודה על הקפה ☕'); await d.click('#nSave'); await wait(d, 1000);
 await wait(e, 700);
 ok('פתק נעוץ אצל שניהם, ודיווחי תשלום לא מוצגים כפתקים', (await txt(e, '#notesWrap')).includes('תודה על הקפה') && !(await txt(e, '#notesWrap')).includes('דיווח'));
+
+// ── החלונית הלבנה העליונה הוסרה
+ok('אין יותר חלונית לבנה עליונה (#toast)', await d.locator('#toast').count() === 0 && await e.locator('#toast').count() === 0);
+ok('פעולות מוצלחות לא מציגות חלונית/הודעה', !D.notes.some((t) => /נוסף|נמחק|ננעץ|הוסר/.test(t)), D.notes.join(' | '));
+
+// ── עדכון מתוך האפליקציה
+E.upd.info = { available: true, current: 11, latest: 12, tag: 'v1.2.12', size: 36 * 1048576, url: 'https://github.com/davidg7375-dotcom/Dali-pay/releases/download/v1.2.12/dali-pay.apk' };
+await e.evaluate(() => window.__fromNative({ event: 'resume' })); await wait(e, 700);
+ok('עדכון: לא נבדק שוב לפני שעה (אין הצפה)', !(await isOn(e, '#upd')));
+await e.reload(); await wait(e, 1700);
+ok('עדכון: מופיעה הודעה עם "עדכן עכשיו"', await isOn(e, '#upd') && (await txt(e, '#upd')).includes('עדכן עכשיו') && (await txt(e, '#uVer')).includes('v1.2.12'));
+await e.screenshot({ path: OUT + 'e06-update.png' });
+await e.click('#uGo'); await wait(e, 700);
+ok('עדכון: הורדה והתקנה הופעלו עם הקישור הנכון', E.installs[0] === E.upd.info.url, E.installs.join());
+ok('עדכון: מוצגות הנחיות הרשאת התקנה', (await txt(e, '#uHelp')).includes('אפשר מהמקור הזה'));
+await e.click('#uSet'); await wait(e, 300);
+ok('עדכון: כפתור פתיחת הגדרות ההתקנה', E.installs.includes('settings'));
+const evil = await E.bridge.handle({ id: 77, op: 'installUpdate', args: { url: 'https://evil.com/x.apk' } });
+ok('עדכון: קישור זר נחסם', !evil.ok, evil.error);
+await e.click('#uLater'); await wait(e, 300);
+ok('עדכון: "אחר כך" סוגר', !(await isOn(e, '#upd')));
+await e.evaluate(() => window.__fromNative({ event: 'resume' })); await wait(e, 500);
+ok('עדכון: אחרי "אחר כך" לא קופץ שוב באותה הפעלה', !(await isOn(e, '#upd')));
+E.upd.info = { available: false };
 
 // ── היסטוריה
 await e.click('#histBtn'); await wait(e, 900);

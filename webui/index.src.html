@@ -152,9 +152,6 @@ label{display:block;font-weight:800;font-size:13px;margin:12px 2px 6px}
 .hist{margin-top:10px;font-size:13px;font-weight:700;opacity:.8}
 .hist div{display:flex;justify-content:space-between;padding:6px 2px;border-bottom:1px dashed #d9d0ff}
 
-#toast{position:fixed;top:calc(env(safe-area-inset-top) + 12px);left:50%;transform:translate(-50%,-140%);z-index:60;background:#fff;color:var(--ink);padding:8px 16px 8px 10px;border-radius:999px;font-weight:900;font-size:14px;display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(30,10,120,.45);transition:transform .4s cubic-bezier(.2,1.3,.4,1);max-width:92vw}
-#toast.on{transform:translate(-50%,0)}
-#toast i{width:40px;height:30px;border-radius:9px;background-size:100% auto;background-position:top;flex:none}
 
 #who{position:fixed;inset:0;z-index:40;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;background:linear-gradient(170deg,rgba(56,182,255,.96),rgba(138,60,255,.97));text-align:center}
 #who.on{display:flex}
@@ -173,6 +170,14 @@ label{display:block;font-weight:800;font-size:13px;margin:12px 2px 6px}
 .dot.ok{background:#19c37d;box-shadow:0 0 0 3px rgba(25,195,125,.25)}.dot.bad{background:#ff4d6d;box-shadow:0 0 0 3px rgba(255,77,109,.25)}
 .invite{border:2px dashed #7c4dff}
 button:disabled{cursor:default}
+#upd{position:fixed;inset:0;z-index:58;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(15,5,60,.6);backdrop-filter:blur(4px)}
+#upd.on{display:flex;animation:fadeIn .3s ease both}
+#upd .ubox{width:min(100%,380px);background:linear-gradient(180deg,#fff,#efeaff);color:var(--ink);border-radius:28px;padding:22px 20px 18px;text-align:center;box-shadow:0 20px 50px rgba(30,10,120,.5);animation:enter .6s cubic-bezier(.2,1.3,.4,1) both}
+#upd .ulogo{width:96px;height:96px;margin:0 auto 10px;border-radius:24px;background-size:cover;animation:float 3s ease-in-out infinite}
+#upd b{display:block;font-size:22px;font-weight:900}
+#upd .uhelp{margin-top:12px;font-size:13px;font-weight:700;line-height:1.45;text-align:right;color:#4b3f8a}
+#upd .uhelp:empty{display:none}
+.spin{display:inline-block;width:16px;height:16px;border:3px solid rgba(28,20,80,.25);border-top-color:#1c1450;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-3px;margin-inline-end:8px}
 /* top banner (main image + caption) */
 .banner .top{display:block;width:100%;aspect-ratio:1000/638;object-fit:cover;animation:kb 18s ease-in-out infinite alternate}
 @keyframes kb{to{transform:scale(1.06) translate(-1%,1%)}}
@@ -251,7 +256,6 @@ button:disabled{cursor:default}
 #sheet.on .hd .pic{animation:charIn .7s cubic-bezier(.2,1.6,.4,1) .12s both,wob 3.5s ease-in-out .9s infinite}
 @keyframes charIn{from{transform:scale(.3) rotate(-14deg);opacity:0}}
 @keyframes wob{0%,100%{transform:rotate(0)}25%{transform:rotate(-3deg) translateY(-2px)}75%{transform:rotate(3deg)}}
-#toast.on i{animation:charIn .6s cubic-bezier(.2,1.6,.4,1) both,wob 1.4s ease-in-out .6s 2}
 .card.fresh{animation:fresh .9s cubic-bezier(.2,1.3,.4,1) both}
 @keyframes fresh{0%{transform:translateX(40px) scale(.9);opacity:0}60%{box-shadow:0 0 0 4px rgba(255,214,58,.9),0 8px 18px rgba(30,10,120,.28)}100%{transform:none;opacity:1}}
 .fx{position:fixed;z-index:70;pointer-events:none;font-size:26px;left:0;top:0;will-change:transform,opacity}
@@ -302,9 +306,10 @@ button:disabled{cursor:default}
 
 <div id="scrim"></div>
 <div id="sheet"></div>
+<div id="upd"><div class="ubox"><div class="ulogo" data-bg="logo"></div><b>גרסה חדשה זמינה</b><div class="s" id="uVer" style="margin-top:4px"></div><button class="cta" id="uGo">עדכן עכשיו</button><button class="cta ghost" id="uLater">אחר כך</button><div class="uhelp" id="uHelp"></div></div></div>
 <div id="pick"><h1>מי אתה מהשניים?</h1><p>בחר את הדמות שלך. השני יקבל את הדמות השנייה אוטומטית.</p><div class="opts"><button class="opt" data-av="a"><div class="ph" data-bg="char_a"></div><span>זה אני</span></button><button class="opt" data-av="b"><div class="ph" data-bg="char_b"></div><span>זה אני</span></button></div></div>
 <div id="cele"><div class="cpic"></div><b></b></div>
-<div id="toast"><i></i><span></span></div>
+
 
 <script>
 (function(){
@@ -342,17 +347,18 @@ window.__fromNative=function(m){
   if(typeof m==='string')m=JSON.parse(m);
   if(m.event==='changed'){queueLoad();return}
   if(m.event==='back'){onBack();return}
-  if(m.event==='resume'){queueLoad();return}
+  if(m.event==='resume'){queueLoad();checkForUpdate();return}
   var p=pend[m.id];if(!p)return;clearTimeout(p.t);delete pend[m.id];
   if(m.ok)p.res(m.result);else p.rej(new Error(m.error||'שגיאה'));
 };
 function onBack(){
+  if($('upd').classList.contains('on')){$('upd').classList.remove('on');updDismissed=true;return}
   if($('sheet').classList.contains('on')){closeSheet();return}
   call('exit',{}).catch(function(){});
 }
 
 /* ---------- toast / sheet ---------- */
-var tt;function toast(msg,pic){var t=$('toast');t.querySelector('i').style.backgroundImage=img(pic||'close');t.querySelector('span').textContent=msg;t.classList.remove('on');void t.offsetWidth;t.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('on')},2600)}
+function toast(msg){call('notify',{text:String(msg)}).catch(function(){})}
 /* ---------- motion & effects ---------- */
 var RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 function countTo(el,val,fmt){
@@ -489,7 +495,7 @@ async function load(){
 }
 async function act(op,args,okMsg,pic,fx,reactions){
   await call(op,args);
-  closeSheet();toast(okMsg,pic);reactAll(reactions);
+  closeSheet();reactAll(reactions);
   if(fx){setTimeout(function(){burst(fx)},150);
     if(fx==='close')celebrate('closeddebt','החוב נסגר! 🎉');
     else if(fx==='deliver')celebrate('product','המוצר נמסר! 📦');}
@@ -536,7 +542,31 @@ async function enter(){
   call('subscribe',{groupId:S.mem.group.id}).catch(function(){});
   await load();
   if(S.sync)ensureAvatar();
+  checkForUpdate();
 }
+/* ---------- in-app update (GitHub Releases) ---------- */
+var updChecked=0,updInfo=null,updDismissed=false;
+async function checkForUpdate(){
+  if(updDismissed||$('upd').classList.contains('on')||Date.now()-updChecked<3600000)return;
+  updChecked=Date.now();
+  var u;try{u=await call('checkUpdate',{},20000)}catch(e){return}
+  if(!u||!u.available)return;
+  updInfo=u;
+  $('uVer').textContent='גרסה '+u.tag+(u.size?' · '+Math.round(u.size/1048576)+'MB':'');
+  $('uHelp').innerHTML='';var g=$('uGo');g.disabled=false;g.textContent='עדכן עכשיו';
+  $('upd').classList.add('on');
+}
+$('uLater').onclick=function(){$('upd').classList.remove('on');updDismissed=true};
+$('uGo').onclick=async function(){
+  var g=$('uGo');if(g.disabled||!updInfo)return;
+  g.disabled=true;g.innerHTML='<span class="spin"></span>מוריד את העדכון…';$('uHelp').innerHTML='';
+  try{
+    await call('installUpdate',{url:updInfo.url},600000);
+    g.disabled=false;g.textContent='עדכן עכשיו';
+    $('uHelp').innerHTML='מתקין העדכונים של Android נפתח: לחץ <b>"עדכן"</b> או <b>"התקן"</b>.<br>אם מופיעה הודעה שאסור להתקין ממקור זה: לחץ <b>"הגדרות"</b>, הפעל <b>"אפשר מהמקור הזה"</b>, חזור לכאן ולחץ שוב <b>"עדכן עכשיו"</b>.<button class="cta ghost" id="uSet" style="margin-top:10px">פתח הגדרות התקנה</button>';
+    $('uSet').onclick=function(){call('openInstallSettings',{}).catch(fail)};
+  }catch(e){g.disabled=false;g.textContent='נסה שוב';$('uHelp').textContent=e.message}
+};
 async function ensureAvatar(){
   if(S.avChecked)return;S.avChecked=true;
   var m=meM(),o=other();
@@ -712,7 +742,7 @@ function noteForm(){
 function noteView(id){
   var n=S.msgs.filter(function(x){return x.id===id})[0];if(!n)return;
   openSheet('notes','פתק מ'+nm(n.sender_id),'<div class="card" style="box-shadow:none;background:#fff8c8;font-weight:800;font-size:17px;line-height:1.4">'+esc(n.body)+'</div><div class="s">'+fdate(n.created_at)+'</div><button class="cta ghost" id="nHide">הסר מהמסך שלי</button>');
-  $('nHide').onclick=function(){var h=lsGet(HIDE_KEY)||[];h.push(id);lsSet(HIDE_KEY,h);closeSheet();render();toast('הפתק הוסר מהמסך','close')};
+  $('nHide').onclick=function(){var h=lsGet(HIDE_KEY)||[];h.push(id);lsSet(HIDE_KEY,h);closeSheet();render()};
 }
 
 /* ---------- account ---------- */

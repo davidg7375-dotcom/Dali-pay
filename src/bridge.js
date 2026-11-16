@@ -22,7 +22,9 @@ export function friendly(e) {
 
 const must = (res) => { if (res && res.error) throw res.error; return res; };
 
-export function createBridge(supabase, { emit = () => {}, share = async () => {}, exit = () => {}, open = async () => {} } = {}) {
+const UPDATE_PREFIX = 'https://github.com/davidg7375-dotcom/Dali-pay/releases/download/';
+
+export function createBridge(supabase, { emit = () => {}, share = async () => {}, exit = () => {}, open = async () => {}, notify = () => {}, update = null } = {}) {
   let channels = [];
   let timer = null;
 
@@ -191,6 +193,26 @@ export function createBridge(supabase, { emit = () => {}, share = async () => {}
       await open(u);
       return true;
     },
+
+    // ───── עדכון מתוך האפליקציה ─────
+    async checkUpdate() {
+      if (!update) return { available: false };
+      return update.check();
+    },
+    async installUpdate({ url }) {
+      if (!update) throw new Error('עדכון לא זמין');
+      const u = String(url || '');
+      if (!u.startsWith(UPDATE_PREFIX) || !/\.apk$/.test(u)) throw new Error('קישור עדכון לא מורשה');
+      await update.install(u);
+      return true;
+    },
+    async openInstallSettings() {
+      if (!update) throw new Error('לא זמין');
+      await update.settings();
+      return true;
+    },
+    // הודעה קצרה של מערכת Android (במקום החלונית הלבנה שהייתה בראש המסך)
+    async notify({ text }) { notify(String(text || '').slice(0, 200)); return true; },
 
     async share({ text }) { await share(text); return true; },
     async exit() { exit(); return true; },

@@ -121,6 +121,18 @@ await t('הודעות שגיאה ידידותיות', () => {
   assert.match(friendly(new Error('Network request failed')), /אין חיבור/);
   assert.match(friendly(new Error('User already registered')), /כבר קיים/);
 });
+await t('עדכון: בדיקה, התקנה מקישור מורשה בלבד, הודעת מערכת', async () => {
+  const log = []; const b = createBridge(server.clientFor(), { notify: (x) => log.push('n:' + x), update: { check: async () => ({ available: true, tag: 'v1.2.99' }), install: async (u) => log.push('i:' + u), settings: async () => log.push('s') } });
+  assert.equal((await b.handle({ id: 1, op: 'checkUpdate' })).result.tag, 'v1.2.99');
+  assert.ok((await b.handle({ id: 2, op: 'installUpdate', args: { url: 'https://github.com/davidg7375-dotcom/Dali-pay/releases/download/v1.2.99/dali-pay.apk' } })).ok);
+  for (const bad of ['https://evil.com/dali-pay.apk', 'https://github.com/someone/else/releases/download/v1/x.apk', 'https://github.com/davidg7375-dotcom/Dali-pay/releases/download/v1/x.exe'])
+    assert.ok(!(await b.handle({ id: 3, op: 'installUpdate', args: { url: bad } })).ok, bad);
+  assert.ok((await b.handle({ id: 4, op: 'openInstallSettings' })).ok);
+  assert.ok((await b.handle({ id: 5, op: 'notify', args: { text: 'שלום' } })).ok);
+  assert.deepEqual(log, ['i:https://github.com/davidg7375-dotcom/Dali-pay/releases/download/v1.2.99/dali-pay.apk', 's', 'n:שלום']);
+  const none = createBridge(server.clientFor());
+  assert.equal((await none.handle({ id: 6, op: 'checkUpdate' })).result.available, false);
+});
 await t('פעולה לא מוכרת נדחית', async () => { await assert.rejects(() => david.call('dropEverything', {}), /פעולה לא מוכרת/); });
 
 console.log(`\n${passed} passed, ${failed} failed`);

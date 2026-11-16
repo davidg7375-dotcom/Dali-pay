@@ -1,6 +1,6 @@
 {
   "name": "dali-pay",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "private": true,
   "main": "index.js",
   "scripts": {
@@ -21,7 +21,9 @@
     "expo-notifications": "*",
     "expo-clipboard": "*",
     "expo-intent-launcher": "*",
-    "react-native-webview": "*"
+    "react-native-webview": "*",
+    "expo-application": "*",
+    "expo-file-system": "*"
   },
   "devDependencies": {
     "babel-preset-expo": "*"

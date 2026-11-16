@@ -2,7 +2,7 @@
   "expo": {
     "name": "DALI PAY",
     "slug": "dali-pay",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -22,7 +22,8 @@
         "backgroundColor": "#5b63ff"
       },
       "permissions": [
-        "POST_NOTIFICATIONS"
+        "POST_NOTIFICATIONS",
+        "REQUEST_INSTALL_PACKAGES"
       ]
     },
     "extra": {},

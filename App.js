@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { AppState, BackHandler, I18nManager, Linking, Share, StatusBar, View } from 'react-native';
+import { AppState, BackHandler, I18nManager, Linking, Share, StatusBar, ToastAndroid, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { configured, supabase } from './src/supabase';
 import { createBridge } from './src/bridge';
 import html from './src/webui.generated';
+import { checkUpdate, installUpdate, openInstallSettings } from './src/updater';
 
 // הממשק כולו (HTML/CSS/JS) רץ בתוך WebView. כל הגישה ל-Supabase עוברת בגשר src/bridge.js.
 I18nManager.allowRTL(false);
@@ -22,6 +23,8 @@ export default function App() {
     share: (text) => Share.share({ message: text }),
     exit: () => BackHandler.exitApp(),
     open: (url) => Linking.openURL(url),
+    notify: (text) => ToastAndroid.show(text, ToastAndroid.LONG),
+    update: { check: checkUpdate, install: installUpdate, settings: openInstallSettings },
   }), [send]);
 
   const onMessage = useCallback(async (e) => {

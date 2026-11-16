@@ -76,6 +76,13 @@ jobs:
       - run: npx expo install babel-preset-expo
       - run: npx expo install --fix
 
+      - name: בדיקת ספריות עדכון מתוך האפליקציה
+        run: |
+          grep -rqE "downloadFileAsync|downloadAsync" node_modules/expo-file-system/build || { echo "::error::expo-file-system ללא API הורדה"; exit 1; }
+          grep -rq "nativeBuildVersion" node_modules/expo-application/build || { echo "::error::expo-application ללא nativeBuildVersion"; exit 1; }
+          grep -rq "startActivityAsync" node_modules/expo-intent-launcher/build || { echo "::error::expo-intent-launcher חסר"; exit 1; }
+          grep -rhoE "static downloadFileAsync|contentUri|getContentUriAsync" node_modules/expo-file-system/build | sort | uniq -c
+
       # בדיקה מהירה: אריזת ה-JS לבדה, כדי לגלות שגיאות לפני בניית Gradle הארוכה
       - name: בדיקת חבילת JS
         run: npx expo export --platform android --output-dir "$RUNNER_TEMP/js-check"

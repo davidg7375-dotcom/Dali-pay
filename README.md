@@ -128,3 +128,8 @@ App.js                   WebView + חיבור הגשר
 - **מיגרציה `supabase/migrations/20261117_v1_4.sql`** (תוספת בלבד): עמודות `bit_link` ו-`avatar` ב-`members`; `record_payment`/`delete_payment` מותרים רק למקבל; טריגר `debts_perm` חוסם חייב מלסגור/להקטין/להפוך חוב; מחיקת חוב רק למקבל; טבלת `activity` (יומן) עם טריגרים ומילוי ראשוני.
 - **דיווח תשלום** מהחייב נשמר בטבלת `messages` הקיימת (`debt_id` + `amount`), והמקבל מאשר (record_payment) או דוחה (`read_at`).
 - **בדיקות מסד נתונים אמיתיות:** `PGHOST=... PGPORT=... PGUSER=postgres bash supabase/tests/run_all.sh` (1.2: 62 בדיקות, 1.4: 39 בדיקות).
+
+## גרסה 1.6 — עדכון מתוך האפליקציה, אייקון חדש
+- `src/updater.js`: בודק את ה-Release האחרון ב-GitHub (תג `v1.2.<מספר בנייה>` מול `versionCode` המותקן), מוריד את `dali-pay.apk` ומפעיל את מתקין Android. מותר רק קובץ מה-Releases של הריפו הזה; Android מתקין רק אם החתימה והמזהה זהים. דורש `REQUEST_INSTALL_PACKAGES`.
+- החלונית הלבנה העליונה (`#toast`) הוסרה; הודעות שגיאה/אישור-לתשלום מוצגות כהודעת מערכת של Android (`notify`).
+- אייקון: הלוגו המקורי, בתוך אזור הבטוח של adaptive icon (לא נחתך בשום צורת מסכה).
