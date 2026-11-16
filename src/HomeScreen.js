@@ -38,19 +38,19 @@ export default function HomeScreen({ ctx }) {
         <Stat label="אני חייב" value={shekel(sum.iOwe)} color={C.redDark} bg="#FFEDF1" />
         <Stat label="חייבים לי" value={shekel(sum.owedToMe)} color={C.greenDark} bg="#E8FBF3" />
       </View>
-      <Stat label="יתרה כללית" value={shekel(sum.net)} color={sum.net < 0 ? C.redDark : sum.net > 0 ? C.greenDark : C.deep} bg="#F1EAFF" wide hint={sum.net > 0 ? 'לטובתך' : sum.net < 0 ? 'לחובתך' : 'מאוזן'} onPress={() => go('debts')} />
+      <Stat label="יתרה כללית" value={shekel(Math.abs(sum.net))} color={sum.net < 0 ? C.redDark : sum.net > 0 ? C.greenDark : C.deep} bg="#F1EAFF" wide hint={sum.net > 0 ? 'לטובתך' : sum.net < 0 ? 'לחובתך' : 'מאוזן'} onPress={() => go('debts')} />
 
       <T style={{ fontSize: 18, fontWeight: '900', color: C.deep, marginTop: 14, marginBottom: 8 }}>📦 מוצרים</T>
       <View style={{ flexDirection: 'row-reverse', gap: 10 }}>
         <Stat label="אצלי, למסור" value={String(ps.toDeliver)} color={C.gold} bg="#FFF6DB" onPress={() => go('products')} />
-        <Stat label="אמורים להגיע אליי" value={String(ps.toReceive)} color={C.purple} bg="#F1EAFF" onPress={() => go('products')} />
+        <Stat label="בדרך אליי" value={String(ps.toReceive)} color={C.purple} bg="#F1EAFF" onPress={() => go('products')} />
         <Stat label="נמסרו" value={String(ps.delivered)} color={C.greenDark} bg="#E8FBF3" onPress={() => go('products')} />
       </View>
 
       <View style={{ flexDirection: 'row-reverse', gap: 10, marginTop: 16 }}>
         <Btn title="+ חוב" style={{ flex: 1 }} onPress={() => go('debts', 'new-debt')} />
         <Btn kind="gold" title="+ מוצר" style={{ flex: 1 }} onPress={() => go('products', 'new-product')} />
-        <Btn kind="ghost" title="שלח הודעה" style={{ flex: 1 }} onPress={() => go('messages', 'compose')} />
+        <Btn kind="ghost" title="הודעה" style={{ flex: 1 }} onPress={() => go('messages', 'compose')} />
       </View>
     </ScrollView>
   );

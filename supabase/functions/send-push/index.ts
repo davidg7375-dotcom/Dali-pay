@@ -7,6 +7,6 @@ import { handle } from './handler.ts';
 
 const admin = createClient(Deno.env.get('SUPABASE_URL'), Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'), { auth: { persistSession: false } });
 const fcm = createFcmClient(Deno.env.get('FCM_SERVICE_ACCOUNT_JSON'));
-const imageBase = Deno.env.get('PUSH_IMAGE_BASE') || 'https://raw.githubusercontent.com/davidg7375/Dali-pay/main/push';
+const imageBase = Deno.env.get('PUSH_IMAGE_BASE') || 'https://raw.githubusercontent.com/davidg7375-dotcom/Dali-pay/main/push';
 
 Deno.serve((req) => handle(req, { imageBase }, admin, fcm));

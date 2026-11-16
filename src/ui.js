@@ -91,7 +91,7 @@ export function Card({ children, style, accent }) {
 
 export function Chips({ options, value, onChange }) {
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row-reverse', gap: 8, paddingVertical: 4 }}>
+    <View style={{ flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 8, paddingVertical: 4 }}>
       {options.map((o) => {
         const on = value === o.value;
         return (
@@ -101,7 +101,7 @@ export function Chips({ options, value, onChange }) {
           </Pressable>
         );
       })}
-    </ScrollView>
+    </View>
   );
 }
 
