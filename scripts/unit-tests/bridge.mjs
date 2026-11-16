@@ -32,33 +32,54 @@ await t('חוב שדוד יוצר מופיע אצל אלי', async () => {
   assert.equal(l.debts.length, 1); assert.equal(l.debts[0].amount, 120); assert.equal(l.debts[0].debtor_id, eUid);
   assert.equal(l.debts[0].created_at, '2026-11-10T12:00:00.000Z');
 });
-await t('תשלום חלקי ואז סגירה מלאה', async () => {
-  const d = (await eli.call('load', { groupId: gid })).debts[0];
-  await eli.call('recordPayment', { debtId: d.id, amount: 30 });
-  let l = await david.call('load', { groupId: gid });
+await t('רק המקבל רושם תשלום; החייב נחסם גם בשרת', async () => {
+  const d = (await eli.call('load', { groupId: gid })).debts[0]; // דוד מקבל, אלי חייב
+  await assert.rejects(() => eli.call('recordPayment', { debtId: d.id, amount: 30 }), /רק מי שמקבל/);
+  await david.call('recordPayment', { debtId: d.id, amount: 30 });
+  let l = await eli.call('load', { groupId: gid });
   assert.equal(l.payments.length, 1); assert.equal(l.debts[0].status, 'open');
-  await assert.rejects(() => eli.call('recordPayment', { debtId: d.id, amount: 100 }), /גבוה מיתרת החוב/);
-  await eli.call('recordPayment', { debtId: d.id, amount: 90 });
-  l = await david.call('load', { groupId: gid });
+  await assert.rejects(() => david.call('recordPayment', { debtId: d.id, amount: 100 }), /גבוה מיתרת החוב/);
+  await assert.rejects(() => eli.call('updateDebt', { id: d.id, patch: { amount: 1 } }), /להקטין/);
+  await david.call('recordPayment', { debtId: d.id, amount: 90 });
+  l = await eli.call('load', { groupId: gid });
   assert.equal(l.debts[0].status, 'paid'); assert.equal(l.payments.length, 2);
-  await assert.rejects(() => eli.call('recordPayment', { debtId: d.id, amount: 1 }), /שולם במלואו/);
 });
-await t('עריכת סכום מתחת למה ששולם נדחית, והשרת מחזיר הודעה בעברית', async () => {
+await t('דיווח תשלום מהחייב, והמקבל מאשר', async () => {
   await david.call('addDebt', { groupId: gid, creditor_id: eUid, debtor_id: dUid, amount: 100, description: 'פיצה' });
   const d = (await david.call('load', { groupId: gid })).debts.find((x) => x.description === 'פיצה');
-  await david.call('recordPayment', { debtId: d.id, amount: 60 });
-  await assert.rejects(() => david.call('updateDebt', { id: d.id, patch: { amount: 50 } }), /נמוך ממה ששולם/);
-  await david.call('updateDebt', { id: d.id, patch: { amount: 200, description: 'פיצה גדולה' } });
-  assert.equal((await eli.call('load', { groupId: gid })).debts.find((x) => x.id === d.id).amount, 200);
+  await david.call('reportPayment', { groupId: gid, debtId: d.id, recipient_id: eUid, amount: 60 });
+  let m = (await eli.call('load', { groupId: gid })).messages.find((x) => x.debt_id === d.id);
+  assert.equal(m.amount, 60); assert.equal(m.read_at, null); assert.equal(m.sender_id, dUid);
+  await assert.rejects(() => david.call('recordPayment', { debtId: d.id, amount: 60 }), /רק מי שמקבל/);
+  await eli.call('recordPayment', { debtId: d.id, amount: 60 });
+  await eli.call('resolveReport', { id: m.id });
+  m = (await david.call('load', { groupId: gid })).messages.find((x) => x.id === m.id);
+  assert.ok(m.read_at, 'הדיווח סומן כמטופל');
+  await assert.rejects(() => eli.call('updateDebt', { id: d.id, patch: { amount: 50 } }), /נמוך ממה ששולם/);
+  await eli.call('updateDebt', { id: d.id, patch: { amount: 200, description: 'פיצה גדולה' } });
+  assert.equal((await david.call('load', { groupId: gid })).debts.find((x) => x.id === d.id).amount, 200);
 });
-await t('מחיקה: רק יוצר החוב או מנהל', async () => {
+await t('מחיקה: רק המקבל', async () => {
   await eli.call('addDebt', { groupId: gid, creditor_id: eUid, debtor_id: dUid, amount: 15, description: 'קפה' });
   const d = (await eli.call('load', { groupId: gid })).debts.find((x) => x.description === 'קפה');
-  await david.call('deleteDebt', { id: d.id }); // דוד מנהל
+  await assert.rejects(() => david.call('deleteDebt', { id: d.id }), /אין הרשאה/); // דוד מנהל אבל חייב
+  await eli.call('deleteDebt', { id: d.id });
   assert.ok(!(await eli.call('load', { groupId: gid })).debts.some((x) => x.id === d.id));
-  await david.call('addDebt', { groupId: gid, creditor_id: dUid, debtor_id: eUid, amount: 5, description: 'מסטיק' });
-  const m = (await eli.call('load', { groupId: gid })).debts.find((x) => x.description === 'מסטיק');
-  await assert.rejects(() => eli.call('deleteDebt', { id: m.id }), /אין הרשאה למחוק/);
+});
+await t('פרופיל: קישור Bit ודמות, כל אחד רק לעצמו', async () => {
+  await david.call('setProfile', { groupId: gid, patch: { bit_link: 'https://www.bitpay.co.il/app/me/ABC', avatar: 'b' } });
+  const me = (await eli.call('load', { groupId: gid })).members.find((x) => x.user_id === dUid);
+  assert.equal(me.bit_link, 'https://www.bitpay.co.il/app/me/ABC'); assert.equal(me.avatar, 'b');
+  await assert.rejects(() => david.call('setProfile', { groupId: gid, patch: { bit_link: 'javascript:alert(1)' } }), /https/);
+  await assert.rejects(() => david.call('setProfile', { groupId: gid, patch: { avatar: 'x' } }), /דמות/);
+  await david.call('setProfile', { groupId: gid, patch: { bit_link: '' } });
+  assert.equal((await eli.call('load', { groupId: gid })).members.find((x) => x.user_id === dUid).bit_link, null);
+});
+await t('פתיחת קישור: רק https', async () => {
+  const opened = []; const b = createBridge(server.clientFor(), { open: async (u) => opened.push(u) });
+  assert.ok((await b.handle({ id: 1, op: 'openUrl', args: { url: 'https://www.bitpay.co.il/app/me/ABC' } })).ok);
+  assert.ok(!(await b.handle({ id: 2, op: 'openUrl', args: { url: 'intent://evil' } })).ok);
+  assert.deepEqual(opened, ['https://www.bitpay.co.il/app/me/ABC']);
 });
 await t('מוצר: אצל מי / למי / נמסר', async () => {
   await david.call('addProduct', { groupId: gid, name: 'מצלמה', quantity: 2, holder_id: dUid, receiver_id: eUid });
@@ -69,7 +90,15 @@ await t('מוצר: אצל מי / למי / נמסר', async () => {
 });
 await t('פתק: השולח והנמען רואים אותו', async () => {
   await david.call('sendNote', { groupId: gid, recipient_id: eUid, body: 'תודה על הקפה ☕' });
-  for (const u of [david, eli]) { const m = (await u.call('load', { groupId: gid })).messages; assert.equal(m.length, 1); assert.equal(m[0].body, 'תודה על הקפה ☕'); }
+  for (const u of [david, eli]) { const m = (await u.call('load', { groupId: gid })).messages.filter((x) => !x.debt_id); assert.equal(m.length, 1); assert.equal(m[0].body, 'תודה על הקפה ☕'); }
+});
+await t('היסטוריה: מי עשה מה', async () => {
+  const h = await eli.call('history', { groupId: gid });
+  const kinds = h.map((x) => x.kind);
+  for (const k of ['debt_add', 'payment', 'debt_closed', 'debt_edit', 'debt_delete', 'product_add', 'product_delivered']) assert.ok(kinds.includes(k), 'חסר ' + k);
+  const del = h.find((x) => x.kind === 'debt_delete'); assert.equal(del.actor_id, eUid);
+  const pay = h.find((x) => x.kind === 'payment'); assert.ok(pay.actor_id && pay.data.amount > 0);
+  assert.ok(h[0].created_at >= h[h.length - 1].created_at, 'מסודר מהחדש לישן');
 });
 await t('זמן אמת: שינוי אצל אחד שולח אירוע לשני', async () => {
   await eli.call('subscribe', { groupId: gid });

@@ -84,7 +84,8 @@ input,select,textarea{font:inherit}
 @keyframes coin{0%,100%{transform:translateY(0) rotateY(0)}50%{transform:translateY(-6px) rotateY(180deg)}}
 .pos{color:#0b7d4d}.neg{color:#c01540}
 
-.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:14px}
+.actions{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
+.big .tile{height:92px!important}
 .big{position:relative;border-radius:22px;padding:0;overflow:hidden;background:linear-gradient(180deg,#fff7b0,#ffd23a 55%,#ffb300);
   color:var(--ink);font-weight:900;font-size:14px;box-shadow:0 7px 0 #c98400,0 14px 22px rgba(30,10,120,.35);transition:transform .12s,box-shadow .12s}
 .big:active{transform:translateY(5px);box-shadow:0 2px 0 #c98400,0 6px 10px rgba(30,10,120,.3)}
@@ -172,6 +173,74 @@ label{display:block;font-weight:800;font-size:13px;margin:12px 2px 6px}
 .dot.ok{background:#19c37d;box-shadow:0 0 0 3px rgba(25,195,125,.25)}.dot.bad{background:#ff4d6d;box-shadow:0 0 0 3px rgba(255,77,109,.25)}
 .invite{border:2px dashed #7c4dff}
 button:disabled{cursor:default}
+/* top banner (main image + caption) */
+.banner .top{display:block;width:100%;aspect-ratio:1000/638;object-fit:cover;animation:kb 18s ease-in-out infinite alternate}
+@keyframes kb{to{transform:scale(1.06) translate(-1%,1%)}}
+.banner .cap{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);white-space:nowrap;padding:10px 22px;border-radius:999px;font-weight:900;font-style:italic;font-size:21px;color:#2a0e7a;
+  background:linear-gradient(180deg,#fff6a8,#ffd52e 55%,#ffb000);box-shadow:0 6px 0 #c98400,0 12px 24px rgba(30,10,120,.45),inset 0 0 0 2px rgba(255,255,255,.7);animation:capIn .9s cubic-bezier(.2,1.5,.4,1) .5s both}
+@keyframes capIn{from{transform:translateX(-50%) scale(.4);opacity:0}}
+.hist-btn{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.88);color:var(--ink);border-radius:999px;padding:6px 12px;font-weight:800;font-size:12px;box-shadow:0 4px 10px rgba(0,0,0,.2)}
+/* avatars in stat cards */
+.stat .av{position:absolute;left:10px;top:10px;width:62px;height:62px;border-radius:50%;background-size:cover;background-position:center;
+  box-shadow:0 0 0 3px #fff,0 6px 14px rgba(40,0,60,.35);animation:bob 3.6s ease-in-out infinite;z-index:1}
+.stat.owed .av{animation-delay:1.2s}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-4px) rotate(-3deg)}}
+.av.jump{animation:jump .8s cubic-bezier(.3,1.6,.5,1)}
+@keyframes jump{30%{transform:translateY(-16px) scale(1.12) rotate(-8deg)}60%{transform:translateY(0) scale(.95) rotate(4deg)}}
+.av.shake{animation:shake .7s ease-in-out}
+@keyframes shake{20%,60%{transform:translateX(-6px) rotate(-8deg)}40%,80%{transform:translateX(6px) rotate(8deg)}}
+.av.spin{animation:spinav .9s cubic-bezier(.3,1.3,.5,1)}
+@keyframes spinav{to{transform:rotate(360deg) scale(1)}50%{transform:rotate(180deg) scale(1.2)}}
+.bub{position:absolute;left:44px;top:0;font-size:26px;z-index:3;pointer-events:none;animation:bub 1.5s ease-out forwards;filter:drop-shadow(0 3px 4px rgba(0,0,0,.25))}
+@keyframes bub{0%{transform:translateY(10px) scale(.2);opacity:0}25%{transform:translateY(-14px) scale(1.25);opacity:1}100%{transform:translateY(-46px) scale(1);opacity:0}}
+.stat .top{padding-inline-end:66px}
+.stat small{white-space:nowrap;font-size:16px!important}
+/* pin-note banner */
+.pinbar{position:relative;display:flex;align-items:center;gap:12px;width:100%;margin-top:16px;padding:14px 16px;border-radius:22px;text-align:right;color:#4a0b4f;overflow:hidden;
+  background:linear-gradient(110deg,#ffd6f1 0%,#ffb3d9 30%,#ffc98a 70%,#fff08a 100%);box-shadow:0 10px 22px rgba(255,90,170,.35),inset 0 0 0 2px rgba(255,255,255,.75);transform:rotate(-1deg)}
+.pinbar:before{content:"";position:absolute;inset:5px;border-radius:18px;border:2px dashed rgba(160,40,140,.28);pointer-events:none}
+.pinbar:active{transform:rotate(-1deg) scale(.97)}
+.pinbar .pn{font-size:34px;animation:pinw 2.6s ease-in-out infinite;transform-origin:70% 90%;filter:drop-shadow(0 4px 4px rgba(0,0,0,.25))}
+@keyframes pinw{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(10deg) translateY(-3px)}}
+.pinbar b{display:block;font-size:20px;font-weight:900}.pinbar small{display:block;font-size:12px;font-weight:700;opacity:.75}
+.pinbar .minis{margin-inline-start:auto;position:relative;width:74px;height:54px;flex:none}
+.pinbar .minis i{position:absolute;width:40px;height:40px;border-radius:4px 4px 12px 4px;box-shadow:0 4px 8px rgba(0,0,0,.18)}
+.pinbar .minis i:nth-child(1){left:0;top:8px;background:#fff176;transform:rotate(-12deg)}
+.pinbar .minis i:nth-child(2){left:18px;top:2px;background:#aef0ff;transform:rotate(6deg);animation:mini 3s ease-in-out infinite}
+.pinbar .minis i:nth-child(3){left:34px;top:10px;background:#c8ffb0;transform:rotate(16deg)}
+@keyframes mini{50%{transform:rotate(-4deg) translateY(-4px)}}
+.pinbar.hop .pn{animation:hop .6s cubic-bezier(.3,1.6,.5,1)}
+/* avatar picker */
+#pick{position:fixed;inset:0;z-index:48;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px 18px;text-align:center;
+  background:linear-gradient(170deg,rgba(56,182,255,.97),rgba(138,60,255,.98))}
+#pick.on{display:flex;animation:fadeIn .35s ease both}
+@keyframes fadeIn{from{opacity:0}}
+#pick h1{margin:0;font-size:26px;font-weight:900;text-shadow:0 3px 10px rgba(30,10,120,.4);animation:enter .6s both}
+#pick p{margin:6px 0 18px;font-weight:700;opacity:.9}
+#pick .opts{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:min(100%,460px)}
+#pick .opt{border-radius:24px;overflow:hidden;background:#fff;color:var(--ink);font-weight:900;font-size:16px;box-shadow:0 12px 26px rgba(30,10,120,.4);animation:enter .7s cubic-bezier(.2,1.3,.4,1) both;transition:transform .2s}
+#pick .opt:nth-child(2){animation-delay:.12s}
+#pick .opt .ph{aspect-ratio:1;background-size:cover;background-position:top}
+#pick .opt span{display:block;padding:10px 4px 12px}
+#pick .opt.sel{transform:scale(1.06);box-shadow:0 0 0 5px #ffd52e,0 16px 30px rgba(30,10,120,.5)}
+#pick .opt.dim{opacity:.35;transform:scale(.94)}
+#pick .opt[disabled]{opacity:.45}
+/* reports / bit */
+.badge.warn{background:#fff1c2;color:#8a5a00}
+.paybox{background:linear-gradient(135deg,#eaf6ff,#f1e9ff);border-radius:18px;padding:12px 14px;margin-top:12px}
+.paybox .big2{font-size:30px;font-weight:900;direction:ltr;text-align:right;color:#4a2bd6}
+.cta.bit{background:linear-gradient(180deg,#5fe0ff,#1ea0ff 60%,#0a6fe0);color:#fff;box-shadow:0 6px 0 #0750a8,0 12px 20px rgba(10,111,224,.35)}
+.rep{display:flex;align-items:center;gap:8px;background:#fff8dc;border-radius:14px;padding:10px 12px;margin-top:10px;font-weight:800;font-size:14px}
+.rep .grow{white-space:normal}
+.rep button{border-radius:12px;padding:8px 12px;font-weight:900;font-size:13px}
+.rep .yes{background:#19c37d;color:#fff}.rep .no{background:#ffe1e7;color:#c01540}
+.lock{font-size:12px;font-weight:800;color:#6b5fb0;margin-top:10px}
+/* history */
+.hday{font-size:12px;font-weight:900;color:#6b5fb0;margin:14px 2px 6px}
+.hrow{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px dashed #e2dcff;animation:rise .35s both}
+.hrow .hi{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:17px;flex:none;background:#f1ecff}
+.hrow .ht{font-weight:800;font-size:14px;line-height:1.35}
+.hrow .hs{font-size:12px;opacity:.6;font-weight:700;margin-top:2px}
 .card,.cta,.note,.who,.seg button,.colors button{transition:transform .16s cubic-bezier(.3,1.5,.5,1)}
 .card:active,.note:active{transform:scale(.97)}
 .cta:active{transform:translateY(4px) scale(.98)}
@@ -207,19 +276,20 @@ button:disabled{cursor:default}
 <div id="gate"><div class="gbox"><img class="ghero" data-src="hero" alt=""><div class="card" id="gateCard"></div></div></div>
 
 <div id="app">
-  <div class="banner"><img data-src="banner" alt="DALI PAY – ניהול חובות ומוצרים"><button class="who" id="whoBtn"></button></div>
+  <div class="banner"><img class="top" data-src="top" alt="DALI PAY"><span class="cap">ניהול חובות ומוצרים!</span><button class="who" id="whoBtn"></button><button class="hist-btn" id="histBtn">🕘 היסטוריה</button></div>
 
   <div class="stats">
-    <div class="stat owe" id="cOwe"><i class="shine"></i><div class="top"><span class="ico">↗</span><small>אני חייב</small></div><b id="sIowe">₪0</b></div>
-    <div class="stat owed" id="cOwed"><i class="shine"></i><div class="top"><span class="ico">↙</span><small>חייבים לי</small></div><b id="sOwed">₪0</b></div>
+    <div class="stat owe" id="cOwe"><i class="shine"></i><div class="av" id="avMe"></div><div class="top"><small>אני חייב</small></div><b id="sIowe">₪0</b></div>
+    <div class="stat owed" id="cOwed"><i class="shine"></i><div class="av" id="avOther"></div><div class="top"><small>חייבים לי</small></div><b id="sOwed">₪0</b></div>
     <div class="stat total" id="cBal"><div style="flex:1"><small>יתרה כוללת</small><b id="sBal">₪0</b></div><span class="coin">🪙</span></div>
   </div>
 
   <div class="actions">
     <button class="big" id="bDebt"><div class="tile" data-bg="opendebt"></div><span>הוסף חוב</span></button>
     <button class="big" id="bProd"><div class="tile" data-bg="addprod"></div><span>הוסף מוצר</span></button>
-    <button class="big" id="bNote"><div class="tile" data-bg="notes"></div><span>נעץ פתק</span></button>
   </div>
+
+  <button class="pinbar" id="bNote"><span class="pn">📌</span><div><b>נעץ פתק</b><small>תודה, תזכורת או סתם חיוך</small></div><span class="minis"><i></i><i></i><i></i></span></button>
 
   <div id="notesWrap"></div>
 
@@ -232,6 +302,7 @@ button:disabled{cursor:default}
 
 <div id="scrim"></div>
 <div id="sheet"></div>
+<div id="pick"><h1>מי אתה מהשניים?</h1><p>בחר את הדמות שלך. השני יקבל את הדמות השנייה אוטומטית.</p><div class="opts"><button class="opt" data-av="a"><div class="ph" data-bg="char_a"></div><span>זה אני</span></button><button class="opt" data-av="b"><div class="ph" data-bg="char_b"></div><span>זה אני</span></button></div></div>
 <div id="cele"><div class="cpic"></div><b></b></div>
 <div id="toast"><i></i><span></span></div>
 
@@ -308,6 +379,19 @@ var ct;function celebrate(pic,text){
   if(RM)return;var c=$('cele');c.querySelector('.cpic').style.backgroundImage=img(pic);c.querySelector('b').textContent=text;
   c.classList.remove('on');void c.offsetWidth;c.classList.add('on');clearTimeout(ct);ct=setTimeout(function(){c.classList.remove('on')},1500);
 }
+var AVK='dalipay.avatar.';
+function meM(){return S.members.filter(function(x){return x.user_id===S.uid})[0]||{}}
+function inv(a){return a==='a'?'b':'a'}
+function myAv(){var m=meM(),o=other();if(m.avatar)return m.avatar;var l=lsGet(AVK+S.uid);if(l==='a'||l==='b')return l;if(o&&o.avatar)return inv(o.avatar);return null}
+function avOf(id){var m=myAv();if(id===S.uid)return m||'a';return m?inv(m):(((S.members.filter(function(x){return x.user_id===id})[0])||{}).avatar||'b')}
+function react(which,emoji,anim){
+  var el=$(which==='me'?'avMe':'avOther');if(!el||RM)return;anim=anim||'jump';
+  el.classList.remove('jump','shake','spin');void el.offsetWidth;el.classList.add(anim);setTimeout(function(){el.classList.remove(anim)},1000);
+  if(emoji){var b=document.createElement('span');b.className='bub';b.textContent=emoji;el.parentNode.appendChild(b);setTimeout(function(){b.remove()},1600)}
+}
+function reactAll(list){(list||[]).forEach(function(r,i){setTimeout(function(){react(r[0],r[1],r[2])},180+i*160)})}
+function reportsFor(id){return S.msgs.filter(function(m){return m.debt_id===id&&m.kind==='message'&&!m.read_at})}
+function memberOf(id){return S.members.filter(function(x){return x.user_id===id})[0]||{}}
 function hop(el){el.classList.remove('hop');void el.offsetWidth;el.classList.add('hop')}
 var splashDone=false,entered=false;
 function maybeShow(){if(splashDone&&entered)$('app').classList.add('show')}
@@ -344,6 +428,8 @@ function render(){
   countTo($('sIowe'),r2(iowe),money);countTo($('sOwed'),r2(owed),money);
   var bal=r2(owed-iowe),b=$('sBal');countTo(b,bal,function(v){v=r2(v);return (v>0?'+':v<0?'−':'')+money(Math.abs(v))});b.className=bal>0?'pos':bal<0?'neg':'';
   $('cDebts').textContent=open.length;
+  $('avMe').style.backgroundImage=img('face_'+avOf(me));
+  var ot=other();$('avOther').style.backgroundImage=img('face_'+(ot?avOf(ot.user_id):inv(avOf(me))));
 
   var h='';
   if(S.mem&&S.members.length<2){
@@ -354,7 +440,9 @@ function render(){
     h+='<div class="card'+(S.fresh[v.d.id]?' fresh':'')+'" data-debt="'+v.d.id+'" style="animation-delay:'+(i*.04)+'s"><div class="row"><div class="dir '+(mine?'out':'in')+'">'+(mine?'↗':'↙')+'</div>'+
       '<div class="grow"><div class="t">'+(mine?'אני חייב ל'+esc(nm(v.d.creditor_id)):esc(nm(v.d.debtor_id))+' חייב לי')+'</div><div class="s">'+esc(v.d.description||'ללא תיאור')+' · '+fdate(v.d.created_at)+'</div></div>'+
       '<div class="amt '+(mine?'out':'in')+'">'+money(v.rem)+'</div></div>'+
-      (v.paid>0?'<div class="bar"><i style="width:'+pct+'%"></i></div><div class="s" style="margin-top:5px">שולם '+money(v.paid)+' מתוך '+money(v.amt)+'</div>':'')+'</div>';
+      (v.paid>0?'<div class="bar"><i style="width:'+pct+'%"></i></div><div class="s" style="margin-top:5px">שולם '+money(v.paid)+' מתוך '+money(v.amt)+'</div>':'')+
+      (function(){var r=reportsFor(v.d.id);if(!r.length)return '';var sm=r.reduce(function(a,x){return a+Number(x.amount||0)},0);
+        return '<div style="margin-top:8px"><span class="badge warn">'+(mine?'⏳ דיווחת על '+money(sm)+' · ממתין לאישור':'💸 '+esc(nm(v.d.debtor_id))+' דיווח על '+money(sm)+' · לאישור שלך')+'</span></div>'})()+'</div>';
   });
   if(!open.length)h+='<div class="empty"><div class="pic" style="background-image:'+img('closeddebt')+'"></div><b>אין חובות פתוחים</b><span>הכול סגור בין שניכם 🎉</span></div>';
   $('debts').innerHTML=h;
@@ -371,7 +459,7 @@ function render(){
   $('prods').innerHTML=h;
 
   var hidden=lsGet(HIDE_KEY)||[];
-  var notes=S.msgs.filter(function(n){return n.kind==='message'&&n.body&&hidden.indexOf(n.id)<0}).slice(0,8);
+  var notes=S.msgs.filter(function(n){return n.kind==='message'&&n.body&&!n.debt_id&&hidden.indexOf(n.id)<0}).slice(0,8);
   $('notesWrap').innerHTML=notes.length?'<div class="notes">'+notes.map(function(n,i){
     var c=0;for(var k=0;k<n.id.length;k++)c=(c+n.id.charCodeAt(k))%4;
     return '<div class="note n'+c+'" data-note="'+n.id+'" style="animation-delay:'+(i*.05)+'s"><span class="pin">📌</span><div>'+esc(n.body)+'</div><small>מאת '+esc(nm(n.sender_id))+'</small></div>'}).join('')+'</div>':'';
@@ -389,14 +477,19 @@ async function load(){
     var had={},fresh={};S.debts.concat(S.prods).forEach(function(x){had[x.id]=1});
     if(S.loadedOnce)d.debts.concat(d.products).forEach(function(x){if(!had[x.id])fresh[x.id]=1});
     S.members=d.members;S.debts=d.debts;S.pays=d.payments;S.prods=d.products;S.msgs=d.messages;
+    var newRep=d.messages.filter(function(m){return m.debt_id&&!m.read_at&&m.recipient_id===S.uid&&S.seenRep&&!S.seenRep[m.id]});
+    var byOther=S.loadedOnce&&d.debts.concat(d.products).some(function(x){return fresh[x.id]&&x.created_by&&x.created_by!==S.uid});
+    S.seenRep=S.seenRep||{};d.messages.forEach(function(m){S.seenRep[m.id]=1});
     S.mem.members=d.members;S.sync=true;S.loadedOnce=true;S.fresh=fresh;cacheSave();
+    if(newRep.length){var r0=newRep[0];setTimeout(function(){toast(nm(r0.sender_id)+' דיווח ששילם '+money(r0.amount)+' · לאישור','opendebt');react('other','💸','jump')},300)}
+    else if(byOther)setTimeout(function(){react('other','✨','jump')},400);
   }catch(e){S.sync=false;S.lastError=e.message}
   loading=false;render();S.fresh={};
   if(again){again=false;load()}
 }
-async function act(op,args,okMsg,pic,fx){
+async function act(op,args,okMsg,pic,fx,reactions){
   await call(op,args);
-  closeSheet();toast(okMsg,pic);
+  closeSheet();toast(okMsg,pic);reactAll(reactions);
   if(fx){setTimeout(function(){burst(fx)},150);
     if(fx==='close')celebrate('closeddebt','החוב נסגר! 🎉');
     else if(fx==='deliver')celebrate('product','המוצר נמסר! 📦');}
@@ -436,12 +529,38 @@ function gate(kind,msg){
   }
 }
 function hideGate(){var g=$('gate');if(!g.classList.contains('on'))return;g.classList.add('leave');setTimeout(function(){g.classList.remove('on','leave')},450)}
-async function signOut(){try{await call('signOut',{})}catch(e){}S.uid=S.email=S.mem=null;S.members=S.debts=S.pays=S.prods=S.msgs=[];S.sync=null;closeSheet();entered=false;$('app').classList.remove('show');render();gate('auth')}
+async function signOut(){try{await call('signOut',{})}catch(e){}S.uid=S.email=S.mem=null;S.members=S.debts=S.pays=S.prods=S.msgs=[];S.sync=null;closeSheet();entered=false;S.avChecked=false;S.seenRep=null;S.loadedOnce=false;$('app').classList.remove('show');render();gate('auth')}
 
 async function enter(){
   S.members=S.mem.members||[];hideGate();render();entered=true;maybeShow();
   call('subscribe',{groupId:S.mem.group.id}).catch(function(){});
   await load();
+  if(S.sync)ensureAvatar();
+}
+async function ensureAvatar(){
+  if(S.avChecked)return;S.avChecked=true;
+  var m=meM(),o=other();
+  if(m.avatar||lsGet(AVK+S.uid))return;
+  if(o&&o.avatar){try{await call('setProfile',{groupId:S.mem.group.id,patch:{avatar:inv(o.avatar)}})}catch(e){lsSet(AVK+S.uid,inv(o.avatar))}queueLoad();return}
+  pickAvatar();
+}
+function pickAvatar(){
+  var o=other(),taken=o&&o.avatar,pk=$('pick');
+  [].forEach.call(pk.querySelectorAll('.opt'),function(b){
+    var av=b.getAttribute('data-av'),isTaken=taken===av;
+    b.classList.remove('sel','dim');b.disabled=isTaken;
+    b.querySelector('span').textContent=isTaken?('זה '+o.display_name):'זה אני';
+    b.onclick=async function(){
+      if(b.disabled)return;
+      [].forEach.call(pk.querySelectorAll('.opt'),function(x){x.classList.toggle('sel',x===b);x.classList.toggle('dim',x!==b)});
+      lsSet(AVK+S.uid,av);
+      try{await call('setProfile',{groupId:S.mem.group.id,patch:{avatar:av}})}
+      catch(e){toast('הבחירה נשמרה במכשיר. כדי שגם '+(o?o.display_name:'השני')+' יראה אותה, צריך את עדכון מסד הנתונים','opendebt')}
+      setTimeout(function(){pk.classList.remove('on');render();react('me','👋','jump');setTimeout(function(){react('other','😄','jump')},350)},650);
+      queueLoad();
+    };
+  });
+  pk.classList.add('on');
 }
 async function afterAuth(){
   var mem=await call('membership',{},15000);
@@ -471,43 +590,77 @@ function debtForm(d){
   var o=other();
   if(!o){toast('החבר עוד לא הצטרף. שלח לו את קוד ההזמנה','opendebt');return}
   d=d||{};var iowe=d.debtor_id?d.debtor_id===S.uid:true,dir={iowe:iowe};
+  var amDebtor=!!d.id&&d.debtor_id===S.uid;
   openSheet('opendebt',d.id?'עריכת חוב':'חוב חדש',
     '<label>סכום (₪)</label><input class="inp" id="fAmt" type="number" inputmode="decimal" min="0" placeholder="0" value="'+(d.amount||'')+'">'+
-    '<label>מי חייב למי</label><div class="seg" id="fDir"><button data-v="1" class="'+(iowe?'on':'')+'">אני חייב ל'+esc(o.display_name)+'</button><button data-v="0" class="'+(iowe?'':'on')+'">'+esc(o.display_name)+' חייב לי</button></div>'+
+    (amDebtor?'<div class="lock">🔒 רק '+esc(nm(d.creditor_id))+' יכול להקטין את הסכום או לשנות את כיוון החוב</div>':
+    '<label>מי חייב למי</label><div class="seg" id="fDir"><button data-v="1" class="'+(iowe?'on':'')+'">אני חייב ל'+esc(o.display_name)+'</button><button data-v="0" class="'+(iowe?'':'on')+'">'+esc(o.display_name)+' חייב לי</button></div>')+
     '<label>עבור מה</label><input class="inp" id="fWhy" placeholder="למשל: ארוחת צהריים" value="'+esc(d.description||'')+'">'+
     '<label>תאריך</label><input class="inp" id="fDate" type="date" value="'+ymd(d.created_at)+'">'+
     '<button class="cta" id="fSave">'+(d.id?'שמור שינויים':'הוסף חוב')+'</button>');
-  $('fDir').onclick=function(e){var b=e.target.closest('button');if(!b)return;dir.iowe=b.dataset.v==='1';[].forEach.call($('fDir').children,function(x){x.classList.toggle('on',x===b)})};
+  if($('fDir'))$('fDir').onclick=function(e){var b=e.target.closest('button');if(!b)return;dir.iowe=b.dataset.v==='1';[].forEach.call($('fDir').children,function(x){x.classList.toggle('on',x===b)})};
   var sv=$('fSave');sv.onclick=guard(sv,async function(){
     var a=parseFloat($('fAmt').value);if(!(a>0)){$('fAmt').focus();toast('צריך להזין סכום','opendebt');return}
     var debtor=dir.iowe?S.uid:o.user_id,creditor=dir.iowe?o.user_id:S.uid;
     var dt=$('fDate').value,created=dt?new Date(dt+'T12:00:00').toISOString():null;
     if(d.id){
-      var patch={amount:r2(a),creditor_id:creditor,debtor_id:debtor,description:$('fWhy').value.trim()};
+      var patch={amount:r2(a),description:$('fWhy').value.trim()};
+      if(amDebtor){if(r2(a)<r2(d.amount)){toast('רק '+nm(d.creditor_id)+' יכול להקטין את הסכום','opendebt');return}}
+      else{patch.creditor_id=creditor;patch.debtor_id=debtor}
       if(created&&ymd(d.created_at)!==dt)patch.created_at=created;
-      await act('updateDebt',{id:d.id,patch:patch},'החוב עודכן','opendebt');
-    }else await act('addDebt',{groupId:S.mem.group.id,creditor_id:creditor,debtor_id:debtor,amount:r2(a),description:$('fWhy').value.trim(),created_at:created},'החוב נוסף','opendebt','debt');
+      await act('updateDebt',{id:d.id,patch:patch},'החוב עודכן','opendebt',null,[['me','✍️','jump']]);
+    }else await act('addDebt',{groupId:S.mem.group.id,creditor_id:creditor,debtor_id:debtor,amount:r2(a),description:$('fWhy').value.trim(),created_at:created},'החוב נוסף','opendebt','debt',
+      dir.iowe?[['me','😅','shake'],['other','🤑','jump']]:[['me','🤑','jump'],['other','😬','shake']]);
   });
 }
 function debtActions(id){
   var d=S.debts.filter(function(x){return x.id===id})[0];if(!d)return;
-  var v=dview(d),mine=d.debtor_id===S.uid;
-  openSheet('opendebt',mine?'אני חייב ל'+nm(d.creditor_id):nm(d.debtor_id)+' חייב לי',
-    '<div class="row" style="justify-content:space-between"><div><div class="s">נותר לתשלום</div><div class="amt '+(mine?'out':'in')+'" style="font-size:32px">'+money(v.rem)+'</div></div><div class="s" style="text-align:left">'+esc(d.description||'')+'<br>'+fdate(d.created_at)+'</div></div>'+
-    '<label>תשלום חלקי (₪)</label><div class="two" style="grid-template-columns:1fr auto"><input class="inp" id="pAmt" type="number" inputmode="decimal" placeholder="סכום"><button class="cta" id="pGo" style="margin:0;padding:0 20px;font-size:16px">עדכן</button></div>'+
-    (v.pays.length?'<div class="hist">'+v.pays.map(function(p){return '<div><span>'+fdate(p.created_at)+' · '+esc(nm(p.paid_by))+'</span><span>'+money(p.amount)+'</span></div>'}).join('')+'</div>':'')+
-    '<button class="cta" id="aPaid">סמן כשולם במלואו ✓</button>'+
-    '<div class="two"><button class="cta ghost" id="aEdit">עריכה</button><button class="cta ghost" id="aDel" style="color:#e0294d">מחיקה</button></div>');
+  var v=dview(d),mine=d.debtor_id===S.uid,cred=memberOf(d.creditor_id),credName=nm(d.creditor_id),reps=reportsFor(d.id);
+  var head='<div class="row" style="justify-content:space-between"><div><div class="s">נותר לתשלום</div><div class="amt '+(mine?'out':'in')+'" style="font-size:32px">'+money(v.rem)+'</div></div><div class="s" style="text-align:left">'+esc(d.description||'')+'<br>'+fdate(d.created_at)+'</div></div>';
+  var hist=v.pays.length?'<div class="hist">'+v.pays.map(function(p){return '<div><span>'+fdate(p.created_at)+' · אושר ע"י '+esc(nm(p.paid_by))+'</span><span>'+money(p.amount)+'</span></div>'}).join('')+'</div>':'';
+  var body;
+  if(mine){
+    var link=cred.bit_link;
+    body=head+'<div class="paybox"><div class="s" style="font-size:13px">לשלם ל<b>'+esc(credName)+'</b></div><div class="big2">'+money(v.rem)+'</div>'+
+      (link?'<button class="cta bit" id="aBit" style="margin-top:10px">פתח את Bit של '+esc(credName)+'</button><div class="s" style="font-size:12px;margin-top:8px">ב-Bit מזינים את הסכום ידנית. פתיחת Bit לא מסמנת את החוב כשולם.</div>'
+            :'<div class="s" style="font-size:13px;margin-top:6px">'+esc(credName)+' עוד לא שמר קישור Bit (בחלון החשבון שלו).</div>')+'</div>'+
+      reps.map(function(r){return '<div class="rep"><span>⏳</span><div class="grow">דיווחת על '+money(r.amount)+' · ממתין לאישור של '+esc(credName)+'</div></div>'}).join('')+
+      '<label>שילמתי? דווח ל'+esc(credName)+' (₪)</label><div class="two" style="grid-template-columns:1fr auto"><input class="inp" id="rAmt" type="number" inputmode="decimal" value="'+v.rem+'"><button class="cta" id="rGo" style="margin:0;padding:0 16px;font-size:15px">דיווחתי ששילמתי</button></div>'+
+      '<div class="lock">🔒 רק '+esc(credName)+' יכול לאשר את התשלום ולסגור את החוב</div>'+hist+
+      '<button class="cta ghost" id="aEdit">עריכה</button>';
+  }else{
+    body=head+reps.map(function(r){return '<div class="rep" data-rep="'+r.id+'"><span>💸</span><div class="grow">'+esc(nm(r.sender_id))+' דיווח ששילם '+money(r.amount)+'<div class="s">'+fdate(r.created_at)+'</div></div><button class="yes" data-ok="'+r.id+'">אשר</button><button class="no" data-no="'+r.id+'">דחה</button></div>'}).join('')+
+      '<label>קיבלתי תשלום חלקי (₪)</label><div class="two" style="grid-template-columns:1fr auto"><input class="inp" id="pAmt" type="number" inputmode="decimal" placeholder="סכום"><button class="cta" id="pGo" style="margin:0;padding:0 20px;font-size:16px">עדכן</button></div>'+hist+
+      '<button class="cta" id="aPaid">קיבלתי הכול · סגור חוב ✓</button>'+
+      '<div class="two"><button class="cta ghost" id="aEdit">עריכה</button><button class="cta ghost" id="aDel" style="color:#e0294d">מחיקה</button></div>';
+  }
+  openSheet('opendebt',mine?'אני חייב ל'+credName:nm(d.debtor_id)+' חייב לי',body);
+  $('aEdit').onclick=function(){debtForm(d)};
+  if(mine){
+    if($('aBit'))$('aBit').onclick=function(){call('openUrl',{url:cred.bit_link}).then(function(){react('me','📲','jump')},fail)};
+    var rg=$('rGo');rg.onclick=guard(rg,async function(){
+      var a=parseFloat($('rAmt').value);if(!(a>0)){$('rAmt').focus();return}a=Math.min(r2(a),v.rem);
+      await act('reportPayment',{groupId:S.mem.group.id,debtId:d.id,recipient_id:d.creditor_id,amount:a},'הדיווח נשלח ל'+credName+' לאישור','opendebt','pay',[['me','💸','jump']]);
+    });
+    return;
+  }
+  [].forEach.call($('sheet').querySelectorAll('[data-ok]'),function(b){b.onclick=guard(b,async function(){
+    var r=reps.filter(function(x){return x.id===b.dataset.ok})[0],a=Math.min(r2(r.amount),v.rem),closes=a>=v.rem;
+    if(a>0)await call('recordPayment',{debtId:d.id,amount:a});
+    await act('resolveReport',{id:r.id},closes?'החוב נסגר!':'התשלום אושר. נותר '+money(v.rem-a),closes?'closeddebt':'opendebt',closes?'close':'pay',
+      closes?[['me','🎉','spin'],['other','🎉','spin']]:[['me','🙌','jump'],['other','👍','jump']]);
+  })});
+  [].forEach.call($('sheet').querySelectorAll('[data-no]'),function(b){b.onclick=guard(b,function(){return act('resolveReport',{id:b.dataset.no},'הדיווח נדחה','close',null,[['other','🤨','shake']])})});
   var pg=$('pGo');pg.onclick=guard(pg,async function(){
     var a=parseFloat($('pAmt').value);if(!(a>0)){$('pAmt').focus();return}
-    a=Math.min(r2(a),v.rem);
-    await act('recordPayment',{debtId:d.id,amount:a},a>=v.rem?'החוב נסגר!':'התשלום נרשם. נותר '+money(v.rem-a),a>=v.rem?'closeddebt':'opendebt',a>=v.rem?'close':'pay');
+    a=Math.min(r2(a),v.rem);var closes=a>=v.rem;
+    await act('recordPayment',{debtId:d.id,amount:a},closes?'החוב נסגר!':'התשלום נרשם. נותר '+money(v.rem-a),closes?'closeddebt':'opendebt',closes?'close':'pay',
+      closes?[['me','🎉','spin'],['other','🎉','spin']]:[['me','🙌','jump'],['other','👍','jump']]);
   });
-  var pd=$('aPaid');pd.onclick=guard(pd,function(){return act('recordPayment',{debtId:d.id,amount:v.rem},'החוב נסגר!','closeddebt','close')});
-  $('aEdit').onclick=function(){debtForm(d)};
+  var pd=$('aPaid');pd.onclick=guard(pd,function(){return act('recordPayment',{debtId:d.id,amount:v.rem},'החוב נסגר!','closeddebt','close',[['me','🎉','spin'],['other','🎉','spin']])});
   var dl=$('aDel');dl.onclick=guard(dl,async function(){
     if(!dl.dataset.sure){dl.dataset.sure=1;dl.textContent='לחץ שוב למחיקה';return}
-    await act('deleteDebt',{id:d.id},'החוב נמחק','close');
+    await act('deleteDebt',{id:d.id},'החוב נמחק','close',null,[['other','🥳','jump']]);
   });
 }
 
@@ -527,10 +680,10 @@ function prodForm(p){
     var n=$('mName').value.trim();if(!n){$('mName').focus();toast('צריך שם למוצר','product');return}
     var row={name:n,quantity:Math.max(1,parseInt($('mQty').value,10)||1),holder_id:$('mHold').value,receiver_id:$('mRec').value};
     if(p.id)await act('updateProduct',{id:p.id,patch:row},'המוצר עודכן','addprod');
-    else await act('addProduct',Object.assign({groupId:S.mem.group.id},row),'המוצר נוסף','addprod','box');
+    else await act('addProduct',Object.assign({groupId:S.mem.group.id},row),'המוצר נוסף','addprod','box',[['me','📦','jump']]);
   });
   if(p.id){
-    var dn=$('mDone');dn.onclick=guard(dn,function(){return act('updateProduct',{id:p.id,patch:{delivered:true}},'המוצר נמסר!','closeddebt','deliver')});
+    var dn=$('mDone');dn.onclick=guard(dn,function(){return act('updateProduct',{id:p.id,patch:{delivered:true}},'המוצר נמסר!','closeddebt','deliver',[['me','📦','jump'],['other','🎁','jump']])});
     var dl=$('mDel');dl.onclick=guard(dl,async function(){if(!dl.dataset.sure){dl.dataset.sure=1;dl.textContent='לחץ שוב למחיקה';return}await act('deleteProduct',{id:p.id},'המוצר נמחק','delprod')});
   }
 }
@@ -539,7 +692,7 @@ function prodActions(id){
   openSheet('product',p.name,
     '<div class="s" style="font-size:14px">כמות: <b>'+esc(p.quantity)+'</b><br>נמצא אצל: <b>'+esc(p.holder_id?nm(p.holder_id):'—')+'</b><br>מיועד ל: <b>'+esc(p.receiver_id?nm(p.receiver_id):'—')+'</b></div>'+
     '<button class="cta" id="xDone">סמן כנמסר ✓</button><button class="cta ghost" id="xEdit">עריכה / מחיקה</button>');
-  var dn=$('xDone');dn.onclick=guard(dn,function(){return act('updateProduct',{id:p.id,patch:{delivered:true}},'המוצר נמסר!','closeddebt','deliver')});
+  var dn=$('xDone');dn.onclick=guard(dn,function(){return act('updateProduct',{id:p.id,patch:{delivered:true}},'המוצר נמסר!','closeddebt','deliver',[['me','📦','jump'],['other','🎁','jump']])});
   $('xEdit').onclick=function(){prodForm(p)};
 }
 
@@ -553,7 +706,7 @@ function noteForm(){
     '<button class="cta" id="nSave">נעץ במסך הבית 📌</button>');
   var sv=$('nSave');sv.onclick=guard(sv,async function(){
     var t=$('nTxt').value.trim();if(!t){$('nTxt').focus();return}
-    await act('sendNote',{groupId:S.mem.group.id,recipient_id:o.user_id,body:t},'הפתק ננעץ','notes','note');
+    await act('sendNote',{groupId:S.mem.group.id,recipient_id:o.user_id,body:t},'הפתק ננעץ','notes','note',[['me','💌','jump'],['other','💛','jump']]);
   });
 }
 function noteView(id){
@@ -564,13 +717,54 @@ function noteView(id){
 
 /* ---------- account ---------- */
 function accountSheet(){
-  if(!S.mem)return;
+  if(!S.mem)return;var m=meM();
   openSheet('settings',nm(S.uid),
     '<div class="s" style="font-size:13px;direction:ltr;text-align:right">'+esc(S.email||'')+'</div><div class="s" style="font-size:13px;margin-top:6px;font-weight:800;color:'+(S.sync===true?'#0b7d4d':'#c01540')+'">'+(S.sync===true?'● מסונכרן עם השרת':'● לא מסונכרן'+(S.lastError?': '+esc(S.lastError):''))+'</div>'+
+    '<label>קישור Bit אישי (כדי שיוכלו לשלם לך)</label><input class="inp" id="bLink" type="url" dir="ltr" placeholder="https://www.bitpay.co.il/app/me/..." value="'+esc(m.bit_link||'')+'"><button class="cta" id="bSave" style="margin-top:10px">שמור קישור</button>'+
+    '<button class="cta ghost" id="aAv">החלף דמות</button>'+
     '<label>קוד הזמנה לקבוצה "'+esc(S.mem.group.name)+'"</label><div class="amt" style="font-size:24px;text-align:right;letter-spacing:2px">'+esc(S.mem.group.invite_code)+'</div>'+
     '<button class="cta ghost" id="aShare">שתף קוד הזמנה</button><button class="cta ghost" id="aOut" style="color:#e0294d">התנתקות</button>');
+  var bs=$('bSave');bs.onclick=guard(bs,async function(){
+    var v=$('bLink').value.trim();
+    if(v&&!/^https:\/\/\S+$/.test(v)){toast('הקישור צריך להתחיל ב-https://','opendebt');return}
+    await act('setProfile',{groupId:S.mem.group.id,patch:{bit_link:v}},v?'קישור ה-Bit נשמר':'קישור ה-Bit הוסר','settings',null,[['me','😎','jump']]);
+  });
+  $('aAv').onclick=function(){closeSheet();pickAvatar()};
   $('aShare').onclick=function(){call('share',{text:'הצטרף אלי ל-DALI PAY. קוד הזמנה: '+S.mem.group.invite_code}).catch(fail)};
   $('aOut').onclick=signOut;
+}
+function hText(a){
+  var d=a.data||{},who=esc(a.actor_id?nm(a.actor_id):'מערכת'),desc=d.description?' · '+esc(d.description):'';
+  var dir=d.creditor_id?esc(nm(d.debtor_id))+' חייב ל'+esc(nm(d.creditor_id))+' ':'';
+  var prod=d.name?esc(d.name)+(d.quantity>1?' ×'+d.quantity:''):'';
+  switch(a.kind){
+    case 'debt_add':return ['➕',who+' הוסיף חוב',dir+money(d.amount)+desc];
+    case 'debt_edit':return ['✏️',who+' ערך חוב',dir+(d.old_amount!=null&&Number(d.old_amount)!==Number(d.amount)?'מ-'+money(d.old_amount)+' ל-'+money(d.amount):money(d.amount))+desc];
+    case 'payment':return ['💰',who+' אישר '+(Number(d.amount)<Number(d.debt_amount)?'תשלום חלקי':'תשלום')+' של '+money(d.amount),dir+desc];
+    case 'payment_cancel':return ['↩️',who+' ביטל תשלום של '+money(d.amount),dir+desc];
+    case 'debt_closed':return ['✅','החוב נסגר ('+who+')',dir+money(d.amount)+desc];
+    case 'debt_reopened':return ['🔓',who+' פתח מחדש חוב',dir+money(d.amount)+desc];
+    case 'debt_delete':return ['🗑️',who+' מחק חוב',dir+money(d.amount)+desc];
+    case 'product_add':return ['📦',who+' הוסיף מוצר',prod];
+    case 'product_edit':return ['✏️',who+' ערך מוצר',prod];
+    case 'product_delivered':return ['🎁',who+' סימן שנמסר',prod];
+    case 'product_delete':return ['🗑️',who+' מחק מוצר',prod];
+  }
+  return ['•',who,esc(a.kind)];
+}
+async function historySheet(){
+  if(!S.mem)return;
+  openSheet('history','היסטוריה','<div id="hList"><div class="s">טוען…</div></div>');
+  try{
+    var rows=await call('history',{groupId:S.mem.group.id}),h='',day='';
+    if(!rows.length)h='<div class="s">עוד אין פעולות</div>';
+    rows.forEach(function(a,i){
+      var dd=fdate(a.created_at);if(dd!==day){day=dd;h+='<div class="hday">'+dd+'</div>'}
+      var t=hText(a),tm=new Date(a.created_at);
+      h+='<div class="hrow" style="animation-delay:'+Math.min(i*.03,.6)+'s"><div class="hi">'+t[0]+'</div><div class="grow"><div class="ht">'+t[1]+'</div><div class="hs">'+t[2]+' · '+pad(tm.getHours())+':'+pad(tm.getMinutes())+'</div></div></div>';
+    });
+    if($('hList'))$('hList').innerHTML=h;
+  }catch(e){if($('hList'))$('hList').innerHTML='<div class="s" style="color:#c01540;font-weight:800">'+esc(e.message)+'</div>'}
 }
 
 /* ---------- events ---------- */
@@ -583,6 +777,9 @@ $('debts').onclick=function(e){
 $('prods').onclick=function(e){var c=e.target.closest('[data-prod]');if(c)prodActions(c.dataset.prod)};
 $('notesWrap').onclick=function(e){var c=e.target.closest('[data-note]');if(c)noteView(c.dataset.note)};
 $('whoBtn').onclick=accountSheet;
+$('histBtn').onclick=historySheet;
+$('avMe').onclick=function(e){e.stopPropagation();react('me',['😎','🤑','😅','🙃','😇'][Math.floor(Math.random()*5)],['jump','spin','shake'][Math.floor(Math.random()*3)])};
+$('avOther').onclick=function(e){e.stopPropagation();react('other',['😄','🤔','😏','🙈','🥳'][Math.floor(Math.random()*5)],['jump','spin','shake'][Math.floor(Math.random()*3)])};
 document.addEventListener('visibilitychange',function(){if(!document.hidden)queueLoad()});
 
 render();boot();

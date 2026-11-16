@@ -1,11 +1,12 @@
 // Supabase מדומה בזיכרון, לבדיקות בלבד. משקף את הסכמה האמיתית (supabase/migrations/20261116_v1_2.sql):
-// create_group/join_group/record_payment, RLS בסיסי (חברי קבוצה בלבד, מחיקה ליוצר/מנהל), וזמן אמת.
+// + 1.4 (20261117_v1_4.sql): רק המקבל מאשר/סוגר/מוחק חוב, פרופיל (bit_link/avatar), יומן activity.
+// create_group/join_group/record_payment, RLS בסיסי (חברי קבוצה בלבד), וזמן אמת.
 // מדמה את ההתנהגות כפי שהיא מתועדת; אינו תחליף לבדיקה מול שרת אמיתי.
 let n = 0;
 const id = () => `id-${++n}-${Math.random().toString(36).slice(2, 8)}`;
 
 export function createFakeServer() {
-  const db = { users: [], groups: [], members: [], debts: [], debt_payments: [], products: [], messages: [] };
+  const db = { users: [], groups: [], members: [], debts: [], debt_payments: [], products: [], messages: [], activity: [] };
   const listeners = new Set();
   const notify = (table) => listeners.forEach((l) => l.table === table && l.cb({ table }));
 
@@ -15,6 +16,8 @@ export function createFakeServer() {
     const memberOf = (g) => db.members.some((m) => m.group_id === g && m.user_id === uid());
     const isOwner = (g) => db.members.some((m) => m.group_id === g && m.user_id === uid() && m.role === 'owner');
     const err = (message) => ({ message });
+    const log = (group_id, kind, entity_id, data) => { db.activity.push({ id: id(), group_id, actor_id: uid(), kind, entity_id, data, created_at: new Date(Date.now() + db.activity.length).toISOString() }); notify('activity'); };
+    const dData = (r) => ({ amount: r.amount, description: r.description, creditor_id: r.creditor_id, debtor_id: r.debtor_id });
 
     const visible = (table, r) => {
       if (!uid()) return false;
@@ -39,10 +42,31 @@ export function createFakeServer() {
             if (!memberOf(r.group_id)) return { data: null, error: err('new row violates row-level security policy') };
           }
           if (table === 'messages' && !memberOf(r.group_id)) return { data: null, error: err('new row violates row-level security policy') };
-          rows.push(r); notify(table); return { data: r, error: null };
+          if (table === 'debts' && q.row.status === 'paid' && r.creditor_id !== uid()) return { data: null, error: err('רק מי שמקבל את הכסף יכול לסמן חוב כשולם') };
+          if (table === 'debts' && q.row.status) r.status = q.row.status;
+          if (table === 'activity') return { data: null, error: err('permission denied for table activity') };
+          rows.push(r); notify(table);
+          if (table === 'debts') log(r.group_id, 'debt_add', r.id, dData(r));
+          if (table === 'products') log(r.group_id, 'product_add', r.id, { name: r.name, quantity: r.quantity, holder_id: r.holder_id, receiver_id: r.receiver_id });
+          return { data: r, error: null };
         }
         if (q.op === 'update') {
+          if (table === 'activity') return { data: null, error: err('permission denied for table activity') };
+          if (table === 'members') {
+            hit = hit.filter((r) => r.user_id === uid());
+            if ('role' in q.patch || 'group_id' in q.patch || 'user_id' in q.patch) return { data: null, error: err('permission denied for table members') };
+            if ('bit_link' in q.patch && q.patch.bit_link != null && !/^https:\/\/[^\s<>"']+$/.test(q.patch.bit_link)) return { data: null, error: err('violates check constraint "members_bit_link_chk"') };
+            if ('avatar' in q.patch && q.patch.avatar != null && !['a', 'b'].includes(q.patch.avatar)) return { data: null, error: err('violates check constraint "members_avatar_chk"') };
+          }
+          if (table === 'messages') hit = hit.filter((r) => r.recipient_id === uid());
           if (table === 'debts') {
+            for (const r of hit) {
+              if (r.creditor_id !== uid()) {
+                if (q.patch.status === 'paid' && r.status !== 'paid') return { data: null, error: err('רק מי שמקבל את הכסף יכול לסמן חוב כשולם') };
+                if ('amount' in q.patch && q.patch.amount < r.amount) return { data: null, error: err('רק מי שמקבל את הכסף יכול להקטין את סכום החוב') };
+                if (('creditor_id' in q.patch && q.patch.creditor_id !== r.creditor_id) || ('debtor_id' in q.patch && q.patch.debtor_id !== r.debtor_id)) return { data: null, error: err('רק מי שמקבל את הכסף יכול לשנות את כיוון החוב') };
+              }
+            }
             for (const r of hit) {
               const paid = db.debt_payments.filter((p) => p.debt_id === r.id).reduce((s, p) => s + p.amount, 0);
               const amt = q.patch.amount ?? r.amount;
@@ -50,12 +74,28 @@ export function createFakeServer() {
               if (amt < paid) return { data: null, error: err(`סכום החוב לא יכול להיות נמוך ממה ששולם כבר (${paid})`) };
             }
           }
-          hit.forEach((r) => Object.assign(r, q.patch)); if (hit.length) notify(table);
+          hit.forEach((r) => {
+            const before = { ...r }; Object.assign(r, q.patch);
+            if (table === 'debts') {
+              const changed = ['amount', 'description', 'creditor_id', 'debtor_id', 'created_at'].some((k) => before[k] !== r[k]);
+              if (changed) log(r.group_id, 'debt_edit', r.id, { ...dData(r), ...(before.amount !== r.amount ? { old_amount: before.amount } : {}) });
+            }
+            if (table === 'products') {
+              if (r.delivered && !before.delivered) { r.delivered_by = uid(); r.delivered_at = new Date().toISOString(); log(r.group_id, 'product_delivered', r.id, { name: r.name, quantity: r.quantity, holder_id: r.holder_id, receiver_id: r.receiver_id }); }
+              else if (['name', 'quantity', 'holder_id', 'receiver_id'].some((k) => before[k] !== r[k])) log(r.group_id, 'product_edit', r.id, { name: r.name, quantity: r.quantity });
+            }
+          });
+          if (hit.length) notify(table);
           return { data: hit, error: null };
         }
         if (q.op === 'delete') {
-          const allowed = hit.filter((r) => r.created_by === uid() || isOwner(r.group_id));
-          allowed.forEach((r) => rows.splice(rows.indexOf(r), 1));
+          if (table === 'activity') return { data: null, error: err('permission denied for table activity') };
+          const allowed = hit.filter((r) => (table === 'debts' ? r.creditor_id === uid() : (r.created_by === uid() || isOwner(r.group_id))));
+          allowed.forEach((r) => {
+            rows.splice(rows.indexOf(r), 1);
+            if (table === 'debts') log(r.group_id, 'debt_delete', r.id, dData(r));
+            if (table === 'products') log(r.group_id, 'product_delete', r.id, { name: r.name, quantity: r.quantity });
+          });
           if (allowed.length) notify(table);
           return { data: null, error: null, count: allowed.length };
         }
@@ -82,18 +122,19 @@ export function createFakeServer() {
       if (!uid()) return { data: null, error: err('לא מחובר') };
       if (fn === 'create_group') {
         const g = { id: id(), name: a.p_name, invite_code: Math.random().toString(16).slice(2, 10), created_at: new Date().toISOString() };
-        db.groups.push(g); db.members.push({ group_id: g.id, user_id: uid(), display_name: a.p_display, role: 'owner', bit_phone: null });
+        db.groups.push(g); db.members.push({ group_id: g.id, user_id: uid(), display_name: a.p_display, role: 'owner', bit_phone: null, bit_link: null, avatar: null });
         notify('members'); return { data: g, error: null };
       }
       if (fn === 'join_group') {
         const g = db.groups.find((x) => x.invite_code === String(a.p_code).trim().toLowerCase());
         if (!g) return { data: null, error: err('קוד הזמנה לא תקין') };
-        if (!memberOf(g.id)) db.members.push({ group_id: g.id, user_id: uid(), display_name: a.p_display, role: 'member', bit_phone: null });
+        if (!memberOf(g.id)) db.members.push({ group_id: g.id, user_id: uid(), display_name: a.p_display, role: 'member', bit_phone: null, bit_link: null, avatar: null });
         notify('members'); return { data: g, error: null };
       }
       if (fn === 'record_payment') {
         const d = db.debts.find((x) => x.id === a.p_debt);
         if (!d || !memberOf(d.group_id)) return { data: null, error: err('החוב לא נמצא') };
+        if (d.creditor_id !== uid()) return { data: null, error: err('רק מי שמקבל את הכסף יכול לאשר תשלום ולסגור את החוב') };
         const amt = Math.round(a.p_amount * 100) / 100;
         if (!(amt > 0)) return { data: null, error: err('סכום התשלום חייב להיות חיובי') };
         const paid = db.debt_payments.filter((p) => p.debt_id === d.id).reduce((s, p) => s + p.amount, 0);
@@ -102,7 +143,8 @@ export function createFakeServer() {
         if (amt > remaining) return { data: null, error: err(`הסכום גבוה מיתרת החוב (${remaining})`) };
         const p = { id: id(), group_id: d.group_id, debt_id: d.id, amount: amt, note: a.p_note || '', paid_by: uid(), created_at: new Date().toISOString() };
         db.debt_payments.push(p);
-        if (amt === remaining) Object.assign(d, { status: 'paid', paid_at: p.created_at, paid_by: uid() });
+        log(d.group_id, 'payment', d.id, { ...dData(d), amount: amt, debt_amount: d.amount });
+        if (amt === remaining) { Object.assign(d, { status: 'paid', paid_at: p.created_at, paid_by: uid() }); log(d.group_id, 'debt_closed', d.id, dData(d)); }
         notify('debt_payments'); notify('debts'); return { data: p, error: null };
       }
       return { data: null, error: err('Could not find the function ' + fn) };

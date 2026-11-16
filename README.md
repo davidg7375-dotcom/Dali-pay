@@ -122,3 +122,9 @@ App.js                   WebView + חיבור הגשר
 - בדיקות: `node scripts/unit-tests/bridge.mjs` (גשר מול שרת מדומה עם שני משתמשים).
 - בדיקת ממשק מלאה בשני דפדפנים: `node scripts/build-webui.mjs && NODE_PATH=$(npm root -g) node scripts/ui-test/e2e.mjs`.
 - פתקי התודה נשמרים בטבלת `messages` (השולח והנמען רואים אותם). הסרת פתק מהמסך נשמרת במכשיר בלבד.
+
+## גרסה 1.5 — דמויות, Bit, אישור תשלום ע"י המקבל, היסטוריה
+
+- **מיגרציה `supabase/migrations/20261117_v1_4.sql`** (תוספת בלבד): עמודות `bit_link` ו-`avatar` ב-`members`; `record_payment`/`delete_payment` מותרים רק למקבל; טריגר `debts_perm` חוסם חייב מלסגור/להקטין/להפוך חוב; מחיקת חוב רק למקבל; טבלת `activity` (יומן) עם טריגרים ומילוי ראשוני.
+- **דיווח תשלום** מהחייב נשמר בטבלת `messages` הקיימת (`debt_id` + `amount`), והמקבל מאשר (record_payment) או דוחה (`read_at`).
+- **בדיקות מסד נתונים אמיתיות:** `PGHOST=... PGPORT=... PGUSER=postgres bash supabase/tests/run_all.sh` (1.2: 62 בדיקות, 1.4: 39 בדיקות).

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { AppState, BackHandler, I18nManager, Share, StatusBar, View } from 'react-native';
+import { AppState, BackHandler, I18nManager, Linking, Share, StatusBar, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { configured, supabase } from './src/supabase';
 import { createBridge } from './src/bridge';
@@ -21,6 +21,7 @@ export default function App() {
     emit: send,
     share: (text) => Share.share({ message: text }),
     exit: () => BackHandler.exitApp(),
+    open: (url) => Linking.openURL(url),
   }), [send]);
 
   const onMessage = useCallback(async (e) => {

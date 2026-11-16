@@ -3,10 +3,13 @@
 // כך שהסשן נשמר ב-AsyncStorage והממשק עצמו לא מחזיק מפתחות.
 // הקובץ טהור (מקבל לקוח supabase מבחוץ) כדי שאפשר יהיה לבדוק אותו ב-Node.
 
-const TABLES = ['members', 'debts', 'debt_payments', 'products', 'messages'];
+const TABLES = ['members', 'debts', 'debt_payments', 'products', 'messages', 'activity'];
 
 export function friendly(e) {
   const m = String((e && (e.message || e.error_description)) || e || '');
+  if (/activity|bit_link|avatar/i.test(m) && /Could not find|schema cache|does not exist|column/i.test(m)) {
+    return 'צריך להריץ את עדכון מסד הנתונים 1.4 (קובץ SQL אחד ב-SQL Editor).';
+  }
   if (/Could not find the table|schema cache|does not exist|relation .* does not exist|PGRST20[45]/i.test(m)) {
     return 'מסד הנתונים עדיין לא עודכן לגרסה 1.2 (חסרה טבלה). יש להריץ Deploy Backend.';
   }
@@ -19,7 +22,7 @@ export function friendly(e) {
 
 const must = (res) => { if (res && res.error) throw res.error; return res; };
 
-export function createBridge(supabase, { emit = () => {}, share = async () => {}, exit = () => {} } = {}) {
+export function createBridge(supabase, { emit = () => {}, share = async () => {}, exit = () => {}, open = async () => {} } = {}) {
   let channels = [];
   let timer = null;
 
@@ -145,6 +148,47 @@ export function createBridge(supabase, { emit = () => {}, share = async () => {}
     // ───── פתקים (נשמרים בטבלת messages הקיימת: השולח והנמען רואים אותם) ─────
     async sendNote({ groupId, recipient_id, body }) {
       must(await supabase.from('messages').insert({ group_id: groupId, recipient_id, kind: 'message', body }));
+      return true;
+    },
+
+    // ───── פרופיל: קישור Bit ודמות (רק השורה של המשתמש עצמו) ─────
+    async setProfile({ groupId, patch }) {
+      const uid = await uidOf();
+      const allowed = {};
+      if ('bit_link' in patch) {
+        const v = patch.bit_link == null ? '' : String(patch.bit_link).trim();
+        if (v && !/^https:\/\/[^\s<>"']+$/.test(v)) throw new Error('הקישור צריך להתחיל ב-https://');
+        allowed.bit_link = v || null;
+      }
+      if ('avatar' in patch) {
+        if (patch.avatar !== 'a' && patch.avatar !== 'b') throw new Error('דמות לא תקינה');
+        allowed.avatar = patch.avatar;
+      }
+      must(await supabase.from('members').update(allowed).eq('group_id', groupId).eq('user_id', uid));
+      return true;
+    },
+
+    // ───── דיווח תשלום מהחייב (נשמר בטבלת messages הקיימת) ואישור/דחייה ע"י המקבל ─────
+    async reportPayment({ groupId, debtId, recipient_id, amount }) {
+      const a = Math.round(Number(amount) * 100) / 100;
+      if (!(a > 0)) throw new Error('סכום לא תקין');
+      must(await supabase.from('messages').insert({ group_id: groupId, recipient_id, kind: 'message', body: `דיווח תשלום ₪${a}`, debt_id: debtId, amount: a }));
+      return true;
+    },
+    async resolveReport({ id }) {
+      must(await supabase.from('messages').update({ read_at: new Date().toISOString() }).eq('id', id));
+      return true;
+    },
+
+    async history({ groupId }) {
+      const res = must(await supabase.from('activity').select('*').eq('group_id', groupId).order('created_at', { ascending: false }).limit(300));
+      return res.data || [];
+    },
+
+    async openUrl({ url }) {
+      const u = String(url || '');
+      if (!/^https:\/\/[^\s<>"']+$/.test(u)) throw new Error('קישור לא תקין');
+      await open(u);
       return true;
     },
 
