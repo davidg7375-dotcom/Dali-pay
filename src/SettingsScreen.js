@@ -1,18 +1,38 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, Share, View } from 'react-native';
 import { supabase } from './supabase';
-import { Btn, Card, Sprite, T, C } from './ui';
+import { Btn, Card, Input, Sprite, T, C } from './ui';
+import { formatPhone, normalizeBitPhone } from './money';
+import { pushSupported, registerForPush, unregisterPush } from './notifications';
 
 const BADGES = [C.purple, C.pink, C.blue, C.gold];
 
 export default function SettingsScreen({ ctx }) {
   const { group, members, me } = ctx;
+  const mine = members.find((m) => m.user_id === me);
+  const [phone, setPhone] = useState(mine?.bit_phone || '');
+  const [pushState, setPushState] = useState(pushSupported ? '...' : 'unavailable');
+  useEffect(() => { setPhone((p) => p || mine?.bit_phone || ''); }, [mine?.bit_phone]);
+  useEffect(() => { if (pushSupported) registerForPush().then((r) => setPushState(r.status === 'error' ? `error:${r.detail || ''}` : r.status)); }, []);
+
+  const savePhone = async () => {
+    const raw = phone.trim();
+    const norm = raw ? normalizeBitPhone(raw) : null;
+    if (raw && !norm) return Alert.alert('מספר לא תקין', 'הזן מספר נייד ישראלי, למשל 050-1234567');
+    const { error } = await supabase.from('members').update({ bit_phone: norm }).eq('group_id', group.id).eq('user_id', me);
+    if (error) Alert.alert('שגיאה', error.message); else { setPhone(norm || ''); Alert.alert('נשמר', norm ? `מספר Bit: ${formatPhone(norm)}` : 'המספר הוסר'); }
+  };
+  const PUSH_TEXT = {
+    '...': 'בודק...', ok: 'פעילות ✓ (גם כשהאפליקציה סגורה)', denied: 'חסומות. אפשר להפעיל בהגדרות המכשיר ← אפליקציות ← DALI PAY ← התראות',
+    unavailable: 'לא זמינות בסביבה הזו',
+  };
+  const pushText = PUSH_TEXT[pushState] || `לא הופעלו (${pushState.replace('error:', '')})`;
 
   // ייצוא כל נתוני הקבוצה לקובץ JSON (שיתוף/שמירה דרך חלון השיתוף של Android)
   const exportData = async () => {
     try {
       const out = { exportedAt: new Date().toISOString(), group, members };
-      for (const t of ['projects', 'debts', 'products']) {
+      for (const t of ['projects', 'debts', 'debt_payments', 'products', 'messages']) {
         const { data, error } = await supabase.from(t).select('*').eq('group_id', group.id);
         if (error) throw error;
         out[t] = data;
@@ -49,6 +69,19 @@ export default function SettingsScreen({ ctx }) {
         ))}
       </Card>
 
+      <Card accent={C.pink}>
+        <T style={{ fontWeight: '900', color: C.deep }}>Bit</T>
+        <T style={{ color: C.muted, fontSize: 14, marginBottom: 8 }}>המספר שאליו השותף יעביר לך כסף ב-Bit.</T>
+        <Input placeholder="05X-XXXXXXX" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+        <Btn kind="gold" title="שמור מספר" onPress={savePhone} />
+      </Card>
+
+      <Card accent={C.magenta}>
+        <T style={{ fontWeight: '900', color: C.deep }}>התראות</T>
+        <T style={{ color: C.muted, fontSize: 14 }}>{pushText}</T>
+        {pushSupported && pushState !== 'ok' && pushState !== '...' && <Btn small kind="ghost" title="נסה שוב" style={{ marginTop: 8, alignSelf: 'flex-end' }} onPress={() => registerForPush().then((r) => setPushState(r.status === 'error' ? `error:${r.detail || ''}` : r.status))} />}
+      </Card>
+
       <Card accent={C.gold}>
         <View style={{ flexDirection: 'row-reverse', alignItems: 'center', marginBottom: 8 }}>
           <Sprite name="piggy" width={88} height={64} cover round={16} style={{ marginLeft: 12 }} />
@@ -60,8 +93,8 @@ export default function SettingsScreen({ ctx }) {
         <Btn kind="gold" title="ייצוא נתונים (JSON)" onPress={exportData} />
       </Card>
 
-      <Btn kind="ghost" title="התנתקות" onPress={() => supabase.auth.signOut()} />
-      <T style={{ color: C.muted, textAlign: 'center', marginTop: 16 }}>DALI PAY v1.1.0</T>
+      <Btn kind="ghost" title="התנתקות" onPress={async () => { try { await unregisterPush(); } catch {} supabase.auth.signOut(); }} />
+      <T style={{ color: C.muted, textAlign: 'center', marginTop: 16 }}>DALI PAY v1.2.0</T>
     </ScrollView>
   );
 }

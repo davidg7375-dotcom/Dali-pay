@@ -1,0 +1,74 @@
+name: Deploy Backend
+
+# מעדכן את מסד הנתונים (מיגרציה בטוחה, בלי מחיקות) ומפרסם את פונקציית ההתראות ב-Supabase.
+# Secrets נדרשים: SUPABASE_ACCESS_TOKEN (טוקן אישי מ-supabase.com/dashboard/account/tokens)
+# ולהתראות גם FCM_SERVICE_ACCOUNT_JSON (מפתח חשבון שירות של Firebase).
+on:
+  workflow_dispatch:
+
+env:
+  PROJECT_REF: lkpmrbuwmnrojfbwrwey
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: בדיקות יחידה
+        run: node scripts/unit-tests/run.mjs
+
+      - name: מיגרציה למסד הנתונים
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then echo "::error::חסר Secret בשם SUPABASE_ACCESS_TOKEN"; exit 1; fi
+          python3 - <<'PY'
+          import json, os, sys, urllib.request, urllib.error
+          sql = open('supabase/migrations/20261116_v1_2.sql', encoding='utf-8').read()
+          req = urllib.request.Request(
+              f"https://api.supabase.com/v1/projects/{os.environ['PROJECT_REF']}/database/query",
+              data=json.dumps({'query': sql}).encode(),
+              headers={'Authorization': 'Bearer ' + os.environ['TOKEN'], 'Content-Type': 'application/json', 'User-Agent': 'dali-pay-ci'},
+              method='POST')
+          try:
+              r = urllib.request.urlopen(req, timeout=120)
+              print('מיגרציה הושלמה', r.status)
+          except urllib.error.HTTPError as e:
+              print('::error::המיגרציה נכשלה', e.code, e.read().decode()[:1500]); sys.exit(1)
+          PY
+
+      - name: בדיקת הטבלאות החדשות
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import json, os, sys, urllib.request
+          q = "select (select count(*) from information_schema.tables where table_schema='public' and table_name in ('debt_payments','messages','device_tokens')) as tables, (select count(*) from pg_proc where proname in ('record_payment','delete_payment','register_device','unregister_device')) as funcs, (select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname in ('debt_payments','messages','device_tokens') and c.relrowsecurity) as rls"
+          req = urllib.request.Request(f"https://api.supabase.com/v1/projects/{os.environ['PROJECT_REF']}/database/query", data=json.dumps({'query': q}).encode(), headers={'Authorization': 'Bearer ' + os.environ['TOKEN'], 'Content-Type': 'application/json', 'User-Agent': 'dali-pay-ci'}, method='POST')
+          out = json.load(urllib.request.urlopen(req, timeout=60))
+          print(out)
+          row = out[0]
+          assert int(row['tables']) == 3 and int(row['funcs']) == 4 and int(row['rls']) == 3, 'חסרים רכיבים'
+          PY
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: פרסום פונקציית ההתראות
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          FCM: ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -n "$FCM" ]; then
+            printf '%s' "$FCM" > "$RUNNER_TEMP/fcm.json"
+            supabase secrets set --project-ref "$PROJECT_REF" "FCM_SERVICE_ACCOUNT_JSON=$(cat "$RUNNER_TEMP/fcm.json")"
+          else
+            echo "::warning::אין FCM_SERVICE_ACCOUNT_JSON — הפונקציה תתפרסם, אבל התראות Push לא יישלחו עד שיוגדר"
+          fi
+          supabase functions deploy send-push --project-ref "$PROJECT_REF" --no-verify-jwt

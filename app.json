@@ -2,7 +2,7 @@
   "expo": {
     "name": "DALI PAY",
     "slug": "dali-pay",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -19,8 +19,21 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#7C3AED"
-      }
+      },
+      "permissions": [
+        "POST_NOTIFICATIONS"
+      ]
     },
-    "extra": {}
+    "extra": {},
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#6D28D9",
+          "defaultChannel": "dalipay"
+        }
+      ]
+    ]
   }
 }

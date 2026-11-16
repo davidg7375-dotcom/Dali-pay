@@ -55,6 +55,15 @@ jobs:
           fi
           echo "DALI_KEYSTORE=$KS" >> "$GITHUB_ENV"
 
+      - name: בדיקות יחידה (כסף, שרת ההתראות)
+        run: node scripts/unit-tests/run.mjs
+
+      - name: הגדרת Firebase להתראות (אם קיים Secret)
+        env:
+          GSJ: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GSJ" ]; then printf '%s' "$GSJ" > google-services.json; echo "Firebase מוגדר — התראות Push ייכללו"; else echo "::warning::אין Secret בשם GOOGLE_SERVICES_JSON — ה-APK ייבנה בלי התראות Push"; fi
+
       - run: npm install
 
       # מיישר גרסאות חבילות Expo ל-SDK (בסביבת הבנייה בלבד)
@@ -92,8 +101,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "v1.1.${{ github.run_number }}" dali-pay.apk \
-            --title "DALI PAY v1.1.${{ github.run_number }}" \
+          gh release create "v1.2.${{ github.run_number }}" dali-pay.apk \
+            --title "DALI PAY v1.2.${{ github.run_number }}" \
             --notes "APK חתום להתקנה. התקנה מעל גרסה קודמת שומרת על הכניסה והנתונים."
 
       # גרסת בדיקה בלבד (x86) לאמולטור ב-CI. לא מתפרסמת ולא נמסרת לטלפון.
