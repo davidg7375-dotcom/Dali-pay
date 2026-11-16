@@ -71,9 +71,15 @@ await d.click('#bDebt'); await wait(d, 400);
 await d.fill('#fAmt', '120'); await d.click('#fDir button[data-v="0"]'); await d.fill('#fWhy', 'מטען'); await d.click('#fSave'); await wait(d, 1100);
 await wait(e, 700);
 ok('אלי: אני חייב 120 (סנכרון)', (await txt(e, '#sIowe')).includes('120'), await txt(e, '#sIowe'));
+ok('אלי: באנר "שלם עכשיו ב-Bit" ליד החוב', (await txt(e, '[data-bit]')).includes('שלם עכשיו ב-Bit') && (await txt(e, '[data-bit]')).includes('120'));
+await e.locator('[data-debt]').first().scrollIntoViewIfNeeded(); await wait(e, 2600); await e.screenshot({ path: OUT + 'e015-bitbar.png' });
+await e.click('[data-bit]'); await wait(e, 500);
+ok('באנר Bit פותח ישירות את הקישור של דוד (בלי לפתוח את חלון החוב)', E.opened.length === 1 && E.opened[0].includes('DAVID123') && !(await isOn(e, '#sheet')), E.opened.join());
+ok('בכרטיס של דוד (המקבל) אין באנר Bit', await (async () => { await wait(d, 300); return (await d.locator('[data-bit]').count()) === 0; })());
+E.opened.length = 0;
 
 // ── אלי (חייב): אין כפתור סגירה, יש Bit ודיווח
-await e.locator('[data-debt]').first().click(); await wait(e, 500);
+await e.locator('[data-debt] .row').first().click(); await wait(e, 500);
 ok('אלי: אין "סגור חוב" / תשלום חלקי לחייב', await e.locator('#aPaid').count() === 0 && await e.locator('#pGo').count() === 0);
 ok('אלי: אין מחיקה לחייב', await e.locator('#aDel').count() === 0);
 ok('אלי: מוצג סכום ומקבל', (await txt(e, '.paybox')).includes('120') && (await txt(e, '.paybox')).includes('דוד'));
@@ -91,7 +97,7 @@ ok('אלי: החוב לא השתנה עד אישור', (await txt(e, '#sIowe')).
 await wait(d, 900);
 ok('דוד: מקבל הודעת מערכת על הדיווח', D.notes.some((t) => t.includes('דיווח ששילם')), D.notes.join(' | '));
 ok('דוד: כרטיס החוב מסומן "לאישור שלך"', (await txt(d, '#debts')).includes('לאישור שלך'));
-await d.locator('[data-debt]').first().click(); await wait(d, 500);
+await d.locator('[data-debt] .row').first().click(); await wait(d, 500);
 await d.screenshot({ path: OUT + 'e03-creditor-sheet.png' });
 await d.locator('[data-ok]').first().click(); await wait(d, 1200);
 ok('דוד: אישר — נותר 70', (await txt(d, '#sOwed')).includes('70'), await txt(d, '#sOwed'));
@@ -99,20 +105,20 @@ await wait(e, 900);
 ok('אלי: רואה 70 והדיווח נעלם', (await txt(e, '#sIowe')).includes('70') && !(await txt(e, '#debts')).includes('ממתין לאישור'));
 
 // ── דיווח שנדחה
-await e.locator('[data-debt]').first().click(); await wait(e, 500); await e.fill('#rAmt', '70'); await e.click('#rGo'); await wait(e, 900);
-await wait(d, 700); await d.locator('[data-debt]').first().click(); await wait(d, 500);
+await e.locator('[data-debt] .row').first().click(); await wait(e, 500); await e.fill('#rAmt', '70'); await e.click('#rGo'); await wait(e, 900);
+await wait(d, 700); await d.locator('[data-debt] .row').first().click(); await wait(d, 500);
 await d.locator('[data-no]').first().click(); await wait(d, 1000);
 ok('דוד: דחה דיווח — החוב נשאר 70', (await txt(d, '#sOwed')).includes('70'));
 
 // ── חייב עורך: הקטנה נחסמת, הגדלה מותרת
-await e.locator('[data-debt]').first().click(); await wait(e, 500); await e.click('#aEdit'); await wait(e, 400);
+await e.locator('[data-debt] .row').first().click(); await wait(e, 500); await e.click('#aEdit'); await wait(e, 400);
 ok('אלי: אין בחירת כיוון בעריכה', await e.locator('#fDir').count() === 0);
 await e.fill('#fAmt', '100'); await e.click('#fSave'); await wait(e, 600);
 ok('אלי: הקטנת סכום נחסמה (הודעת מערכת)', E.notes.some((t) => t.includes('להקטין')), E.notes.join(' | '));
 await e.click('#scrim', { position: { x: 5, y: 5 } }); await wait(e, 400);
 
 // ── סגירה מלאה ע"י המקבל
-await d.locator('[data-debt]').first().click(); await wait(d, 500); await d.click('#aPaid'); await wait(d, 600);
+await d.locator('[data-debt] .row').first().click(); await wait(d, 500); await d.click('#aPaid'); await wait(d, 600);
 await d.screenshot({ path: OUT + 'e04-celebrate.png' });
 await wait(d, 800);
 ok('דוד: החוב נסגר', await d.locator('[data-debt]').count() === 0);

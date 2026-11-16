@@ -42,8 +42,8 @@ export default function App() {
   }, [send]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#38b6ff' }}>
-      <StatusBar barStyle="light-content" backgroundColor="#38b6ff" translucent={false} />
+    <View style={{ flex: 1, backgroundColor: '#7cf3ff' }}>
+      <StatusBar barStyle="dark-content" backgroundColor="#7cf3ff" translucent={false} />
       <WebView
         ref={ref}
         source={{ html, baseUrl: BASE }}
@@ -58,7 +58,7 @@ export default function App() {
         bounces={false}
         showsVerticalScrollIndicator={false}
         onShouldStartLoadWithRequest={(r) => r.url === 'about:blank' || r.url.startsWith(BASE)}
-        style={{ flex: 1, backgroundColor: '#38b6ff' }}
+        style={{ flex: 1, backgroundColor: '#7cf3ff' }}
       />
     </View>
   );
