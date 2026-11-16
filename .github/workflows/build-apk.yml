@@ -58,6 +58,12 @@ jobs:
       - name: בדיקות יחידה (כסף, שרת ההתראות)
         run: node scripts/unit-tests/run.mjs
 
+      - name: בדיקות הגשר ל-Supabase (שני משתמשים)
+        run: node scripts/unit-tests/bridge.mjs
+
+      - name: בניית הממשק (HTML יחיד עם תמונות מוטמעות)
+        run: node scripts/build-webui.mjs
+
       - name: הגדרת Firebase להתראות (אם קיים Secret)
         env:
           GSJ: ${{ secrets.GOOGLE_SERVICES_JSON }}

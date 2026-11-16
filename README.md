@@ -106,3 +106,19 @@ eas.json               פרופילי בנייה ל-APK
 
 - `node scripts/unit-tests/run.mjs` — חישובי כסף ושרת ההתראות (30 בדיקות).
 - `bash supabase/tests/run_all.sh` — מיגרציה, הרצה חוזרת והרשאות RLS מול Postgres (62 בדיקות).
+
+## גרסה 1.3 — ממשק חדש (WebView) על אותו Supabase
+
+הממשק נבנה מחדש כמסך בית יחיד (HTML/CSS/JS) שרץ בתוך WebView. האפליקציה, שם החבילה (`com.dalipay.app`) ומפתח החתימה נשארו זהים, לכן ה-APK מחליף את הקיים.
+
+```
+webui/index.src.html     הממשק (מקור האמת). תמונות ב-webui/img
+scripts/build-webui.mjs  בונה src/webui.generated.js (HTML יחיד עם תמונות מוטמעות)
+src/bridge.js            כל הגישה ל-Supabase: כניסה, קבוצה, חובות, תשלומים, מוצרים, פתקים, זמן אמת
+App.js                   WebView + חיבור הגשר
+```
+
+- אחרי שינוי ב-`webui/` מריצים `node scripts/build-webui.mjs` (ה-workflow עושה זאת אוטומטית).
+- בדיקות: `node scripts/unit-tests/bridge.mjs` (גשר מול שרת מדומה עם שני משתמשים).
+- בדיקת ממשק מלאה בשני דפדפנים: `node scripts/build-webui.mjs && NODE_PATH=$(npm root -g) node scripts/ui-test/e2e.mjs`.
+- פתקי התודה נשמרים בטבלת `messages` (השולח והנמען רואים אותם). הסרת פתק מהמסך נשמרת במכשיר בלבד.
