@@ -1,0 +1,48 @@
+// צילומי מסך לבדיקה ויזואלית של אנימציות (מסך פתיחה, בית, אפקטים). לא חלק מ-CI.
+import { createRequire } from 'node:module';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createBridge } from '../../src/bridge.js';
+import { createFakeServer } from '../unit-tests/fake-supabase.mjs';
+const require = createRequire(import.meta.url);
+const { chromium } = require('playwright');
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const html = fs.readFileSync(path.join(root, 'webui/dist/index.html'), 'utf8');
+const OUT = process.env.SHOTS || '/tmp/dalipay-shots/'; fs.mkdirSync(OUT, { recursive: true });
+const BASE = 'https://dalipay.app.local/';
+const server = createFakeServer();
+const b = await chromium.launch();
+async function user(fast) {
+  const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+  const page = await ctx.newPage(); const errs = []; page.on('pageerror', (e) => errs.push(String(e)));
+  const br = createBridge(server.clientFor(), { emit: (o) => page.evaluate((m) => window.__fromNative(m), o).catch(() => {}) });
+  await page.exposeFunction('__host', async (s) => { const r = await br.handle(JSON.parse(s)); await page.evaluate((m) => window.__fromNative(m), r).catch(() => {}); });
+  await page.addInitScript((f) => { if (f) window.DP_SPLASH_MS = 200; window.ReactNativeWebView = { postMessage: (s) => window.__host(s) }; }, fast);
+  await page.route(BASE + '**', (r) => r.fulfill({ contentType: 'text/html; charset=utf-8', body: html }));
+  page.errs = errs; return page;
+}
+const d = await user(false);
+await d.goto(BASE); await d.waitForTimeout(1300); await d.screenshot({ path: OUT + 's1-splash.png' });
+await d.waitForTimeout(1900);
+await d.click('#gSw'); await d.fill('#gEmail', 'a@a.com'); await d.fill('#gPass', 'secret1'); await d.click('#gGo'); await d.waitForTimeout(600);
+await d.fill('#gName', 'דוד'); await d.click('#gNew'); await d.waitForTimeout(300);
+await d.screenshot({ path: OUT + 's2-enter-mid.png' });
+const code = await d.evaluate(() => document.querySelector('#inviteCard b').textContent);
+const e = await user(true); await e.goto(BASE); await e.waitForTimeout(600);
+await e.click('#gSw'); await e.fill('#gEmail', 'b@b.com'); await e.fill('#gPass', 'secret2'); await e.click('#gGo'); await e.waitForTimeout(500);
+await e.fill('#gName', 'אלי'); await e.fill('#gCode', code); await e.click('#gJoin'); await e.waitForTimeout(800);
+await d.waitForTimeout(800);
+await d.click('#bDebt'); await d.waitForTimeout(500); await d.fill('#fAmt', '245'); await d.click('#fDir button[data-v="0"]'); await d.fill('#fWhy', 'אוזניות'); await d.click('#fSave');
+await d.waitForTimeout(500); await d.screenshot({ path: OUT + 's3-burst-add.png' });
+await d.waitForTimeout(1500);
+await e.waitForTimeout(500);
+await e.click('#bDebt'); await e.waitForTimeout(500); await e.fill('#fAmt', '80'); await e.fill('#fWhy', 'שווארמה'); await e.click('#fSave'); await e.waitForTimeout(2000);
+await d.waitForTimeout(1500); await d.screenshot({ path: OUT + 's4-home.png' });
+await d.locator('[data-debt]').filter({ hasText: 'שווארמה' }).click(); await d.waitForTimeout(650); await d.screenshot({ path: OUT + 's5-sheet.png' });
+await d.click('#aPaid'); await d.waitForTimeout(550); await d.screenshot({ path: OUT + 's6-celebrate.png' });
+await d.waitForTimeout(2000);
+await d.click('#bNote'); await d.waitForTimeout(500); await d.fill('#nTxt', 'תודה על ההסעה 🚗'); await d.click('#nSave'); await d.waitForTimeout(2500);
+await d.screenshot({ path: OUT + 's7-home-note.png', fullPage: false });
+console.log('errors:', d.errs.concat(e.errs));
+await b.close();
